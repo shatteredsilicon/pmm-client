@@ -364,7 +364,8 @@ func (a *Admin) isPasswordProtected(svcType string, port int) bool {
 // isSSLProtected check if endpoint is https/tls protected.
 func (a *Admin) isSSLProtected(svcType string, port int) bool {
 	url := a.qanAPI.URL(fmt.Sprintf("http://%s:%d", a.Config.BindAddress, port))
-	if _, _, err := a.qanAPI.Get(url); err != nil && strings.Contains(err.Error(), "malformed HTTP response") {
+	if resp, body, err := a.qanAPI.Get(url); (err != nil && strings.Contains(err.Error(), "malformed HTTP response")) ||
+		(err == nil && resp.StatusCode == http.StatusBadRequest && strings.Contains(string(body), "Client sent an HTTP request to an HTTPS server")) {
 		return true
 	}
 

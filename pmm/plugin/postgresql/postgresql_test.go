@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/percona/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )

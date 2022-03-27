@@ -3,7 +3,7 @@ package metrics
 import (
 	"context"
 
-	"github.com/percona/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
 )
 
 var _ plugin.Metrics = (*Metrics)(nil)
