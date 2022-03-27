@@ -32,10 +32,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/percona/pmm-client/pmm"
 	"github.com/percona/pmm-client/tests/fakeapi"
 	"github.com/percona/pmm/proto"
 	pc "github.com/percona/pmm/proto/config"
+	"github.com/shatteredsilicon/pmm-client/pmm"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )

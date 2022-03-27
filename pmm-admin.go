@@ -27,7 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/percona/pmm-client/pmm"
 	"github.com/percona/pmm-client/pmm/plugin"
 	linuxMetrics "github.com/percona/pmm-client/pmm/plugin/linux/metrics"
 	mongodbMetrics "github.com/percona/pmm-client/pmm/plugin/mongodb/metrics"
@@ -39,6 +38,7 @@ import (
 	postgresqlMetrics "github.com/percona/pmm-client/pmm/plugin/postgresql/metrics"
 	proxysqlMetrics "github.com/percona/pmm-client/pmm/plugin/proxysql/metrics"
 	"github.com/percona/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/pmm-client/pmm"
 	"github.com/spf13/cobra"
 )
 
