@@ -26,7 +26,7 @@ export GOOS=linux
 
 printf "Building pmm-admin...\t\t"
 echo $(git log -1 --format="%d %cd")
-go build -ldflags "-X github.com/percona/pmm-client/pmm.Version=$VERSION" -o distro/bin/pmm-admin
+go build -ldflags "-X github.com/shatteredsilicon/pmm-client/pmm.Version=$VERSION" -o distro/bin/pmm-admin
 
 printf "Building percona-qan-agent...\t"
 cd $GOPATH/src/github.com/percona/qan-agent

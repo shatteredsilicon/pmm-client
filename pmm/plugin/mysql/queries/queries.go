@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/percona/pmm-client/pmm/plugin"
-	"github.com/percona/pmm-client/pmm/plugin/mysql"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin/mysql"
 	pc "github.com/percona/pmm/proto/config"
 )
 

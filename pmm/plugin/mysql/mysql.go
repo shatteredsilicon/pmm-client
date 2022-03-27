@@ -10,8 +10,8 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/percona/go-mysql/dsn"
-	"github.com/percona/pmm-client/pmm/plugin"
-	"github.com/percona/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/pmm-client/pmm/utils"
 )
 
 // Flags are MySQL specific flags.

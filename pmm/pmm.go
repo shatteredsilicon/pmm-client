@@ -45,7 +45,7 @@ import (
 	"github.com/percona/pmm/version"
 	"github.com/prometheus/client_golang/api/prometheus"
 
-	"github.com/percona/pmm-client/pmm/managed"
+	"github.com/shatteredsilicon/pmm-client/pmm/managed"
 )
 
 // Admin main class.

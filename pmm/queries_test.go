@@ -25,7 +25,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/percona/pmm-client/tests/fakeapi"
+	"github.com/shatteredsilicon/pmm-client/tests/fakeapi"
 	pc "github.com/percona/pmm/proto/config"
 	protocfg "github.com/percona/pmm/proto/config"
 	"github.com/stretchr/testify/assert"

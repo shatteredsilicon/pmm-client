@@ -32,10 +32,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/percona/pmm-client/tests/fakeapi"
 	"github.com/percona/pmm/proto"
 	pc "github.com/percona/pmm/proto/config"
 	"github.com/shatteredsilicon/pmm-client/pmm"
+	"github.com/shatteredsilicon/pmm-client/tests/fakeapi"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )
@@ -66,8 +66,8 @@ func TestPmmAdmin(t *testing.T) {
 
 	bin := binDir + "/pmm-admin"
 	xVariables := map[string]string{
-		"github.com/percona/pmm-client/pmm.Version": "gotest",
-		"github.com/percona/pmm-client/pmm.RootDir": rootDir,
+		"github.com/shatteredsilicon/pmm-client/pmm.Version": "gotest",
+		"github.com/shatteredsilicon/pmm-client/pmm.RootDir": rootDir,
 	}
 	var ldflags []string
 	for x, value := range xVariables {

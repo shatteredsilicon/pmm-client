@@ -24,7 +24,7 @@ import (
 
 	consul "github.com/hashicorp/consul/api"
 	service "github.com/percona/kardianos-service"
-	"github.com/percona/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
 )
 
 // AddMetrics add metrics service to monitoring.

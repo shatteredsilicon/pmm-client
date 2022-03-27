@@ -24,7 +24,7 @@ import (
 
 	"github.com/prometheus/common/model"
 
-	"github.com/percona/pmm-client/pmm/managed"
+	"github.com/shatteredsilicon/pmm-client/pmm/managed"
 )
 
 type ExternalLabelPair struct {

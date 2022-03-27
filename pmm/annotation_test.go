@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/percona/pmm-client/pmm/managed"
-	"github.com/percona/pmm-client/tests/fakeapi"
+	"github.com/shatteredsilicon/pmm-client/pmm/managed"
+	"github.com/shatteredsilicon/pmm-client/tests/fakeapi"
 	"github.com/stretchr/testify/assert"
 )
 

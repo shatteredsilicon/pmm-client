@@ -22,7 +22,7 @@ import (
 	"errors"
 	"regexp"
 
-	"github.com/percona/pmm-client/pmm/managed"
+	"github.com/shatteredsilicon/pmm-client/pmm/managed"
 )
 
 // AddAnnotation posts annotation to managed.
