@@ -3,8 +3,8 @@ package queries
 import (
 	"context"
 
-	"github.com/percona/pmm-client/pmm/plugin"
-	"github.com/percona/pmm-client/pmm/plugin/mongodb"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin/mongodb"
 	pc "github.com/percona/pmm/proto/config"
 )
 

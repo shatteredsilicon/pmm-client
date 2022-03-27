@@ -29,7 +29,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/percona/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/pmm-client/pmm/utils"
 )
 
 const (

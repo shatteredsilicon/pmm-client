@@ -31,8 +31,8 @@ import (
 
 	consul "github.com/hashicorp/consul/api"
 	"github.com/percona/kardianos-service"
-	"github.com/percona/pmm-client/pmm/plugin"
-	"github.com/percona/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/pmm-client/pmm/utils"
 	"github.com/percona/pmm/proto"
 	pc "github.com/percona/pmm/proto/config"
 )

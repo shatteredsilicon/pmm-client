@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/percona/pmm-client/pmm/plugin"
-	"github.com/percona/pmm-client/pmm/plugin/mongodb"
-	"github.com/percona/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/pmm-client/pmm/plugin/mongodb"
+	"github.com/shatteredsilicon/pmm-client/pmm/utils"
 )
 
 var _ plugin.Metrics = (*Metrics)(nil)
