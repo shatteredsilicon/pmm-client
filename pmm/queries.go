@@ -30,11 +30,11 @@ import (
 	"time"
 
 	consul "github.com/hashicorp/consul/api"
-	"github.com/percona/kardianos-service"
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
-	"github.com/shatteredsilicon/pmm-client/pmm/utils"
-	"github.com/percona/pmm/proto"
-	pc "github.com/percona/pmm/proto/config"
+	service "github.com/percona/kardianos-service"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
+	"github.com/shatteredsilicon/ssm-client/pmm/utils"
+	"github.com/shatteredsilicon/ssm/proto"
+	pc "github.com/shatteredsilicon/ssm/proto/config"
 )
 
 // AddQueries add instance to Query Analytics.
@@ -134,9 +134,9 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 		// We have to run agent before adding it to QAN.
 		svcConfig := &service.Config{
 			Name:        fmt.Sprintf("pmm-%s-queries-%d", q.Name(), port),
-			DisplayName: "PMM Query Analytics agent",
-			Description: "PMM Query Analytics agent",
-			Executable:  fmt.Sprintf("%s/bin/percona-qan-agent", AgentBaseDir),
+			DisplayName: "SSM Query Analytics agent",
+			Description: "SSM Query Analytics agent",
+			Executable:  fmt.Sprintf("%s/bin/ssm-qan-agent", AgentBaseDir),
 			Arguments:   a.Args,
 		}
 		if err := installService(svcConfig); err != nil {
@@ -472,7 +472,7 @@ func (a *Admin) stopQAN(agentID, UUID string) error {
 // sendQANCmd sends cmd to agent throughq QAN API.
 func (a *Admin) sendQANCmd(agentID, cmdName string, data []byte) error {
 	cmd := proto.Cmd{
-		User:    fmt.Sprintf("pmm-admin@%s", a.qanAPI.Hostname()),
+		User:    fmt.Sprintf("ssm-admin@%s", a.qanAPI.Hostname()),
 		Service: "qan",
 		Cmd:     cmdName,
 		Data:    data,
@@ -508,7 +508,7 @@ func (a *Admin) registerAgent() error {
 	os.RemoveAll(fmt.Sprintf("%s/%s", AgentBaseDir, "data"))
 	os.RemoveAll(fmt.Sprintf("%s/%s", AgentBaseDir, "instance"))
 
-	path := fmt.Sprintf("%s/bin/percona-qan-agent-installer", AgentBaseDir)
+	path := fmt.Sprintf("%s/bin/ssm-qan-agent-installer", AgentBaseDir)
 	args := []string{"-basedir", AgentBaseDir}
 	if a.Config.ServerSSL {
 		args = append(args, "-use-ssl")

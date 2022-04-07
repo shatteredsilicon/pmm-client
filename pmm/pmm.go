@@ -41,11 +41,11 @@ import (
 	"github.com/docker/cli/templates"
 	"github.com/fatih/color"
 	consul "github.com/hashicorp/consul/api"
-	"github.com/percona/kardianos-service"
-	"github.com/percona/pmm/version"
+	service "github.com/percona/kardianos-service"
 	"github.com/prometheus/client_golang/api/prometheus"
+	"github.com/shatteredsilicon/ssm/version"
 
-	"github.com/shatteredsilicon/pmm-client/pmm/managed"
+	"github.com/shatteredsilicon/ssm-client/pmm/managed"
 )
 
 // Admin main class.
@@ -126,14 +126,14 @@ func (a *Admin) SetAPI() error {
 	resp, _, err := a.qanAPI.Get(qanApiURL)
 	if err != nil {
 		if strings.Contains(err.Error(), "x509: cannot validate certificate") {
-			return fmt.Errorf(`Unable to connect to PMM server by address: %s
+			return fmt.Errorf(`Unable to connect to SSM server by address: %s
 
-Looks like PMM server running with self-signed SSL certificate.
-Run 'pmm-admin config --server-insecure-ssl' to enable such configuration.`, a.Config.ServerAddress)
+Looks like SSM server running with self-signed SSL certificate.
+Run 'ssm-admin config --server-insecure-ssl' to enable such configuration.`, a.Config.ServerAddress)
 		}
 		serverURL := fmt.Sprintf("%s://%s", scheme, a.Config.ServerAddress)
 		cleanedErr := strings.Replace(err.Error(), a.serverURL, serverURL, -1)
-		return fmt.Errorf(`Unable to connect to PMM server by address: %s
+		return fmt.Errorf(`Unable to connect to SSM server by address: %s
 %s
 
 * Check if the configured address is correct.
@@ -144,23 +144,23 @@ Run 'pmm-admin config --server-insecure-ssl' to enable such configuration.`, a.C
 
 	// Try to detect 400 (SSL) and 401 (HTTP auth).
 	if resp.StatusCode == http.StatusBadRequest {
-		return fmt.Errorf(`Unable to connect to PMM server by address: %s
+		return fmt.Errorf(`Unable to connect to SSM server by address: %s
 
 Looks like the server is enabled for SSL or self-signed SSL.
-Use 'pmm-admin config' to enable the corresponding SSL option.`, a.Config.ServerAddress)
+Use 'ssm-admin config' to enable the corresponding SSL option.`, a.Config.ServerAddress)
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		return fmt.Errorf(`Unable to connect to PMM server by address: %s
+		return fmt.Errorf(`Unable to connect to SSM server by address: %s
 
 Looks like the server is password protected.
-Use 'pmm-admin config' to define server user and password.`, a.Config.ServerAddress)
+Use 'ssm-admin config' to define server user and password.`, a.Config.ServerAddress)
 	}
 
 	// Check Consul status.
 	if leader, err := a.consulAPI.Status().Leader(); err != nil || leader == "" {
-		return fmt.Errorf(`Unable to connect to PMM server by address: %s
+		return fmt.Errorf(`Unable to connect to SSM server by address: %s
 
-Even though the server is reachable it does not look to be PMM server.
+Even though the server is reachable it does not look to be SSM server.
 Check if the configured address is correct. %s`, a.Config.ServerAddress, err)
 	}
 
@@ -170,12 +170,12 @@ Check if the configured address is correct. %s`, a.Config.ServerAddress, err)
 		qanApiURL = a.qanAPI.URL(serverURL, qanAPIBasePath, "ping")
 		if resp, _, err := a.qanAPI.Get(qanApiURL); err == nil && resp.StatusCode == http.StatusOK {
 			return fmt.Errorf(`This client is configured with HTTP basic authentication.
-However, PMM server is not.
+However, SSM server is not.
 
 If you forgot to enable password protection on the server, you may want to do so.
 
 Otherwise, run the following command to reset the config and disable authentication:
-pmm-admin config --server %s %s`, a.Config.ServerAddress, helpText)
+ssm-admin config --server %s %s`, a.Config.ServerAddress, helpText)
 		}
 	}
 
@@ -188,9 +188,9 @@ pmm-admin config --server %s %s`, a.Config.ServerAddress, helpText)
 	return nil
 }
 
-// PrintInfo print PMM client info.
+// PrintInfo print SSM client info.
 func (a *Admin) PrintInfo() {
-	fmt.Printf("pmm-admin %s\n\n", Version)
+	fmt.Printf("ssm-admin %s\n\n", Version)
 	a.ServerInfo()
 	fmt.Printf("%-15s | %s\n\n", "Service Manager", service.Platform())
 
@@ -199,7 +199,7 @@ func (a *Admin) PrintInfo() {
 }
 
 const (
-	ServerInfoTemplate = `{{define "ServerInfo"}}{{printf "%-15s | %s %s" "PMM Server" .ServerAddress .ServerSecurity}}
+	ServerInfoTemplate = `{{define "ServerInfo"}}{{printf "%-15s | %s %s" "SSM Server" .ServerAddress .ServerSecurity}}
 {{printf "%-15s | %s" "Client Name" .ClientName}}
 {{printf "%-15s | %s %s" "Client Address" .ClientAddress .ClientBindAddress}}{{end}}`
 
@@ -481,7 +481,7 @@ func (a *Admin) checkGlobalDuplicateService(service, name string) error {
 		return fmt.Errorf(`another client with the same name '%s' but different address detected.
 
 This client address is %s, the other one - %s.
-Re-configure this client with the different name using 'pmm-admin config' command.`,
+Re-configure this client with the different name using 'ssm-admin config' command.`,
 			a.Config.ClientName, a.Config.ClientAddress, node.Node.Address)
 	}
 
@@ -573,16 +573,16 @@ func (a *Admin) CheckVersion(ctx context.Context) (fatal bool, err error) {
 	// Texts are slightly different, including anchors.
 	if serverVersion.Major < clientVersion.Major {
 		return true, fmt.Errorf(
-			"Error: You cannot run PMM Server %d.x with PMM Client %d.x.\n"+
-				"Please upgrade PMM Server by following the instructions at "+
+			"Error: You cannot run SSM Server %d.x with SSM Client %d.x.\n"+
+				"Please upgrade SSM Server by following the instructions at "+
 				"https://www.percona.com/doc/percona-monitoring-and-management/deploy/index.html#deploy-pmm-updating",
 			serverVersion.Major, clientVersion.Major,
 		)
 	}
 	if serverVersion.Major > clientVersion.Major {
 		return true, fmt.Errorf(
-			"Error: You cannot run PMM Server %d.x with PMM Client %d.x.\n"+
-				"Please upgrade PMM Client by following the instructions at "+
+			"Error: You cannot run SSM Server %d.x with SSM Client %d.x.\n"+
+				"Please upgrade SSM Client by following the instructions at "+
 				"https://www.percona.com/doc/percona-monitoring-and-management/deploy/index.html#updating",
 			serverVersion.Major, clientVersion.Major,
 		)
@@ -591,15 +591,15 @@ func (a *Admin) CheckVersion(ctx context.Context) (fatal bool, err error) {
 	// Return warning if versions do not match.
 	if serverVersion.Less(&clientVersion) {
 		return false, fmt.Errorf(
-			"Warning: The recommended upgrade process is to upgrade PMM Server first, then PMM Clients.\n" +
+			"Warning: The recommended upgrade process is to upgrade SSM Server first, then SSM Clients.\n" +
 				"See Percona's instructions for upgrading at " +
 				"https://www.percona.com/doc/percona-monitoring-and-management/deploy/index.html#deploy-pmm-updating.",
 		)
 	}
 	if clientVersion.Less(&serverVersion) {
 		return false, fmt.Errorf(
-			"Warning: It is recommended to use the same version on both PMM Server and Client, otherwise some features will not work correctly.\n" +
-				"Please upgrade your PMM Client by following the instructions from " +
+			"Warning: It is recommended to use the same version on both SSM Server and Client, otherwise some features will not work correctly.\n" +
+				"Please upgrade your SSM Client by following the instructions from " +
 				"https://www.percona.com/doc/percona-monitoring-and-management/deploy/index.html#updating",
 		)
 	}
@@ -706,7 +706,7 @@ func (a *Admin) Uninstall() uint16 {
 		}
 	}
 
-	// Find any local PMM services and try to uninstall ignoring the errors.
+	// Find any local SSM services and try to uninstall ignoring the errors.
 	localServices := GetLocalServices()
 
 	for _, service := range localServices {
@@ -718,7 +718,7 @@ func (a *Admin) Uninstall() uint16 {
 	return count
 }
 
-// GetLocalServices finds any local PMM services
+// GetLocalServices finds any local SSM services
 func GetLocalServices() (services []string) {
 	dir, extension := GetServiceDirAndExtension()
 
@@ -772,7 +772,7 @@ func FileExists(file string) bool {
 	return true
 }
 
-// CheckBinaries check if all PMM Client binaries are at their paths
+// CheckBinaries check if all SSM Client binaries are at their paths
 func CheckBinaries() string {
 	paths := []string{
 		fmt.Sprintf("%s/node_exporter", PMMBaseDir),
@@ -780,8 +780,8 @@ func CheckBinaries() string {
 		fmt.Sprintf("%s/mongodb_exporter", PMMBaseDir),
 		fmt.Sprintf("%s/proxysql_exporter", PMMBaseDir),
 		fmt.Sprintf("%s/postgres_exporter", PMMBaseDir),
-		fmt.Sprintf("%s/bin/percona-qan-agent", AgentBaseDir),
-		fmt.Sprintf("%s/bin/percona-qan-agent-installer", AgentBaseDir),
+		fmt.Sprintf("%s/bin/ssm-qan-agent", AgentBaseDir),
+		fmt.Sprintf("%s/bin/ssm-qan-agent-installer", AgentBaseDir),
 	}
 	for _, p := range paths {
 		if !FileExists(p) {
@@ -815,7 +815,7 @@ func generateSSLCertificate(host, certFile, keyFile string) error {
 	notAfter, _ := time.Parse("Jan 2 15:04:05 2006", "Nov 25 15:00:00 2026")
 	serialNumber, _ := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 	cert := x509.Certificate{
-		Subject:               pkix.Name{Organization: []string{"PMM Client"}},
+		Subject:               pkix.Name{Organization: []string{"SSM Client"}},
 		SerialNumber:          serialNumber,
 		NotBefore:             notBefore,
 		NotAfter:              notAfter,

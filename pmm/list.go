@@ -27,8 +27,8 @@ import (
 
 	"github.com/docker/cli/templates"
 	consul "github.com/hashicorp/consul/api"
-	"github.com/percona/kardianos-service"
-	pc "github.com/percona/pmm/proto/config"
+	service "github.com/percona/kardianos-service"
+	pc "github.com/shatteredsilicon/ssm/proto/config"
 )
 
 // Service status description.
@@ -173,7 +173,7 @@ func (l *List) Format(format string) string {
 
 // each non-empty field value must end with newline
 const (
-	DefaultListTemplate = `pmm-admin {{.Version}}
+	DefaultListTemplate = `ssm-admin {{.Version}}
 
 {{template "ServerInfo" .ServerInfo}}
 {{printf "%-15s | %s" "Service Manager" .Platform}}

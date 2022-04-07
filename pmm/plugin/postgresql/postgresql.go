@@ -11,8 +11,8 @@ import (
 
 	"github.com/lib/pq"
 
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
-	"github.com/shatteredsilicon/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
+	"github.com/shatteredsilicon/ssm-client/pmm/utils"
 )
 
 // Flags are PostgreSQL specific flags.

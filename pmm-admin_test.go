@@ -32,10 +32,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/percona/pmm/proto"
-	pc "github.com/percona/pmm/proto/config"
-	"github.com/shatteredsilicon/pmm-client/pmm"
-	"github.com/shatteredsilicon/pmm-client/tests/fakeapi"
+	"github.com/shatteredsilicon/ssm-client/pmm"
+	"github.com/shatteredsilicon/ssm-client/tests/fakeapi"
+	"github.com/shatteredsilicon/ssm/proto"
+	pc "github.com/shatteredsilicon/ssm/proto/config"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )
@@ -48,26 +48,26 @@ type pmmAdminData struct {
 func TestPmmAdmin(t *testing.T) {
 	var err error
 
-	// We can't/shouldn't use /usr/local/percona/ (the default basedir), so use
+	// We can't/shouldn't use /opt/ss/ (the default basedir), so use
 	// a tmpdir instead with roughly the same structure.
-	rootDir, err := ioutil.TempDir("/tmp", "pmm-client-test-rootdir-")
+	rootDir, err := ioutil.TempDir("/tmp", "ssm-client-test-rootdir-")
 	assert.Nil(t, err)
 	defer func() {
 		err := os.RemoveAll(rootDir)
 		assert.Nil(t, err)
 	}()
 
-	binDir, err := ioutil.TempDir("/tmp", "pmm-client-test-bindir-")
+	binDir, err := ioutil.TempDir("/tmp", "ssm-client-test-bindir-")
 	assert.Nil(t, err)
 	defer func() {
 		err := os.RemoveAll(binDir)
 		assert.Nil(t, err)
 	}()
 
-	bin := binDir + "/pmm-admin"
+	bin := binDir + "/ssm-admin"
 	xVariables := map[string]string{
-		"github.com/shatteredsilicon/pmm-client/pmm.Version": "gotest",
-		"github.com/shatteredsilicon/pmm-client/pmm.RootDir": rootDir,
+		"github.com/shatteredsilicon/ssm-client/pmm.Version": "gotest",
+		"github.com/shatteredsilicon/ssm-client/pmm.RootDir": rootDir,
 	}
 	var ldflags []string
 	for x, value := range xVariables {
@@ -126,7 +126,7 @@ func TestPmmAdmin(t *testing.T) {
 		testStartStopRestartNoServiceFound,
 		testVersion,
 	}
-	t.Run("pmm-admin", func(t *testing.T) {
+	t.Run("ssm-admin", func(t *testing.T) {
 		for _, f := range tests {
 			f := f // capture range variable
 			fName := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
@@ -166,37 +166,37 @@ func testHelp(t *testing.T, data pmmAdminData) {
 	}()
 
 	expected := `Usage:
-  pmm-admin \[flags\]
-  pmm-admin \[command\]
+  ssm-admin \[flags\]
+  ssm-admin \[command\]
 
 Available Commands:
-  config         Configure PMM Client.
+  config         Configure SSM Client.
   add            Add service to monitoring.
   annotate       Annotate application events.
   remove         Remove service from monitoring.
   list           List monitoring services for this system.
-  info           Display PMM Client information \(works offline\).
+  info           Display SSM Client information \(works offline\).
   check-network  Check network connectivity between client and server.
-  ping           Check if PMM server is alive.
+  ping           Check if SSM server is alive.
   start          Start monitoring service.
   stop           Stop monitoring service.
   restart        Restart monitoring service.
-  show-passwords Show PMM Client password information \(works offline\).
-  purge          Purge metrics data on PMM server.
+  show-passwords Show SSM Client password information \(works offline\).
+  purge          Purge metrics data on SSM server.
   repair         Repair installation.
   uninstall      Removes all monitoring services with the best effort.
   summary        Fetch system data for diagnostics.
   help           Help about any command
 
 Flags:
-  -c, --config-file string   PMM config file \(default ".*"\)
-  -h, --help                 help for pmm-admin
+  -c, --config-file string   SSM config file \(default ".*"\)
+  -h, --help                 help for ssm-admin
       --skip-root            skip UID check \(experimental\)
       --timeout duration     timeout \(default 5s\)
       --verbose              verbose output
   -v, --version              show version
 
-Use "pmm-admin \[command\] --help" for more information about a command.
+Use "ssm-admin \[command\] --help" for more information about a command.
 `
 	t.Run("command", func(t *testing.T) {
 		cmd := exec.Command(
@@ -234,18 +234,18 @@ func testHelpAddPostgreSQL(t *testing.T, data pmmAdminData) {
 	expected := `This command adds the given PostgreSQL instance to system and metrics monitoring.
 
 When adding a PostgreSQL instance, this tool tries to auto-detect the DSN and credentials.
-If you want to create a new user to be used for metrics collecting, provide --create-user option. pmm-admin will create
+If you want to create a new user to be used for metrics collecting, provide --create-user option. ssm-admin will create
 a new user 'pmm' automatically using the given \(auto-detected\) PostgreSQL credentials for granting purpose.
 
-\[name\] is an optional argument, by default it is set to the client name of this PMM client.
+\[name\] is an optional argument, by default it is set to the client name of this SSM client.
 
 Usage:
-  pmm-admin add postgresql \[flags\] \[name\]
+  ssm-admin add postgresql \[flags\] \[name\]
 
 Examples:
-  pmm-admin add postgresql --password abc123
-  pmm-admin add postgresql --password abc123 --create-user
-  pmm-admin add postgresql --password abc123 --port 3307 instance3307
+  ssm-admin add postgresql --password abc123
+  ssm-admin add postgresql --password abc123 --create-user
+  ssm-admin add postgresql --password abc123 --port 3307 instance3307
 
 Flags:
       --create-user                   create a new PostgreSQL user
@@ -260,7 +260,7 @@ Flags:
       --user string                   PostgreSQL username
 
 Global Flags:
-  -c, --config-file string   PMM config file \(default ".*"\)
+  -c, --config-file string   SSM config file \(default ".*"\)
       --service-port int     service port
       --skip-root            skip UID check \(experimental\)
       --timeout duration     timeout \(default 5s\)
@@ -312,9 +312,9 @@ func testConfig(t *testing.T, data pmmAdminData) {
 	output, err := cmd.CombinedOutput()
 	assert.Nil(t, err)
 
-	expected := `OK, PMM server is alive.
+	expected := `OK, SSM server is alive.
 
-` + fmt.Sprintf("%-15s | %s ", "PMM Server", host) + `
+` + fmt.Sprintf("%-15s | %s ", "SSM Server", host) + `
 ` + fmt.Sprintf("%-15s | %s", "Client Name", url) + `
 ` + fmt.Sprintf("%-15s | %s ", "Client Address", port) + `
 `
@@ -416,9 +416,9 @@ func testConfigVerbose(t *testing.T, data pmmAdminData) {
 < X-Server-Time: .*
 <\s*
 < "127.0.0.1:8300"
-OK, PMM server is alive.
+OK, SSM server is alive.
 
-PMM Server      | ` + host + `
+SSM Server      | ` + host + `
 Client Name     | ` + clientName + `
 Client Address  | ` + hostPort + `
 `
@@ -454,7 +454,7 @@ func testConfigVerboseServerNotAvailable(t *testing.T, data pmmAdminData) {
 > Accept-Encoding: gzip
 >\s*
 >\s*
-Unable to connect to PMM server by address: xyz
+Unable to connect to SSM server by address: xyz
 Get http://xyz/qan-api/ping: dial tcp: lookup xyz.*: no such host
 
 * Check if the configured address is correct.
@@ -488,7 +488,7 @@ func testConfigServerHideCredentials(t *testing.T, data pmmAdminData) {
 	output, err := cmd.CombinedOutput()
 	assert.IsType(t, &exec.ExitError{}, err)
 
-	expected := `Unable to connect to PMM server by address: 172.0.0.1:8080
+	expected := `Unable to connect to SSM server by address: 172.0.0.1:8080
 Get http://172.0.0.1:8080/qan-api/ping: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)
 
 * Check if the configured address is correct.
@@ -513,7 +513,7 @@ func testStartStopRestartAllWithNoServices(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/pmm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/ssm.yml", bytes, 0600)
 
 	services := []string{
 		"start",
@@ -569,7 +569,7 @@ func testListEmpty(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/pmm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// Test empty list
 	t.Run("list (empty)", func(t *testing.T) {
@@ -580,9 +580,9 @@ func testListEmpty(t *testing.T, data pmmAdminData) {
 
 		output, err := cmd.CombinedOutput()
 		assert.Nil(t, err)
-		expected := `pmm-admin gotest
+		expected := `ssm-admin gotest
 
-PMM Server      \| .*
+SSM Server      \| .*
 Client Name     \| test-client-name
 Client Address  \| .*
 Service Manager \| .*
@@ -642,7 +642,7 @@ func testListNonEmpty(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/pmm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// create fake system service
 	{
@@ -672,7 +672,7 @@ func testListNonEmpty(t *testing.T, data pmmAdminData) {
 		expected := `This command displays the list of monitoring services and their details.
 
 Usage:
-  pmm-admin list \[flags\]
+  ssm-admin list \[flags\]
 
 Aliases:
   list, ls
@@ -683,7 +683,7 @@ Flags:
       --json            print result as json
 
 Global Flags:
-  -c, --config-file string   PMM config file \(default ".*?"\)
+  -c, --config-file string   SSM config file \(default ".*?"\)
       --skip-root            skip UID check \(experimental\)
       --timeout duration     timeout \(default 5s\)
       --verbose              verbose output
@@ -701,9 +701,9 @@ Global Flags:
 		output, err := cmd.CombinedOutput()
 		assert.Nil(t, err)
 
-		expected := `pmm-admin gotest
+		expected := `ssm-admin gotest
 
-PMM Server      \| .*
+SSM Server      \| .*
 Client Name     \| test-client-name
 Client Address  \| .*
 Service Manager \| .*
@@ -842,7 +842,7 @@ func testStartStopRestart(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/pmm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// create fake system service
 	{
@@ -906,7 +906,7 @@ func testStartStopRestartAllWithServices(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/pmm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// create fake system services
 	numOfServices := 3
@@ -928,8 +928,8 @@ func testStartStopRestartAllWithServices(t *testing.T, data pmmAdminData) {
 
 		output, err := cmd.CombinedOutput()
 		assert.Nil(t, err)
-		expected := `OK, all services already started. Run 'pmm-admin list' to see monitoring services.
-Unable to connect to PMM server by address: just
+		expected := `OK, all services already started. Run 'ssm-admin list' to see monitoring services.
+Unable to connect to SSM server by address: just
 Get http://just/qan-api/ping: dial tcp: lookup just.*: no such host
 
 * Check if the configured address is correct.
@@ -963,7 +963,7 @@ Get http://just/qan-api/ping: dial tcp: lookup just.*: no such host
 		output, err := cmd.CombinedOutput()
 		assert.Nil(t, err)
 		expected := `OK, restarted ` + fmt.Sprintf("%d", numOfServices) + ` services.
-Unable to connect to PMM server by address: just
+Unable to connect to SSM server by address: just
 Get http://just/qan-api/ping: dial tcp: lookup just.*: no such host
 
 * Check if the configured address is correct.
@@ -1002,7 +1002,7 @@ func testStartStopRestartNoServiceFound(t *testing.T, data pmmAdminData) {
 		BindAddress:   "localhost",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/pmm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/ssm.yml", bytes, 0600)
 	svcName := "mysql:queries"
 
 	t.Run("start", func(t *testing.T) {
@@ -1073,7 +1073,7 @@ func testCheckNetwork(t *testing.T, data pmmAdminData) {
 		BindAddress:   "localhost",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/pmm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+pmm.PMMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// Test the command
 	{
@@ -1084,18 +1084,18 @@ func testCheckNetwork(t *testing.T, data pmmAdminData) {
 
 		output, err := cmd.CombinedOutput()
 		assert.Nil(t, err)
-		expected := `PMM Network Status
+		expected := `SSM Network Status
 
 Server Address | ` + host + `
 Client Address | localhost
 
 * System Time
 NTP Server (0.pool.ntp.org)         | .*
-PMM Server                          | .*
-PMM Client                          | .*
-PMM Server Time Drift               | OK
-PMM Client Time Drift               | OK
-PMM Client to PMM Server Time Drift | OK
+SSM Server                          | .*
+SSM Client                          | .*
+SSM Server Time Drift               | OK
+SSM Client Time Drift               | OK
+SSM Client to SSM Server Time Drift | OK
 
 * Connection: Client --> Server
 -------------------- -------\s*
@@ -1480,7 +1480,7 @@ func testAddMySQL(t *testing.T, data pmmAdminData) {
 		"mysql",
 		"--user", "root",
 		"--port", "3306", // MySQL instance with performance_schema enabled.
-		"--host", "127.0.0.1", // Force pmm-admin to ignore auto detection, otherwise it tries to connect to socket.
+		"--host", "127.0.0.1", // Force ssm-admin to ignore auto detection, otherwise it tries to connect to socket.
 	)
 
 	output, err := cmd.CombinedOutput()
@@ -1546,7 +1546,7 @@ func testAddMySQLAdditionalParamsErr(t *testing.T, data pmmAdminData) {
 		"mysql",
 		"--user", "root",
 		"--port", "3306", // MySQL instance with performance_schema enabled.
-		"--host", "127.0.0.1", // Force pmm-admin to ignore auto detection, otherwise it tries to connect to socket.
+		"--host", "127.0.0.1", // Force ssm-admin to ignore auto detection, otherwise it tries to connect to socket.
 		"--", "--collect.perf_schema.eventsstatements",
 	)
 
@@ -1554,9 +1554,9 @@ func testAddMySQLAdditionalParamsErr(t *testing.T, data pmmAdminData) {
 	assert.Error(t, err)
 	expected := `We can't determine which exporter should receive additional flags: --collect.perf_schema.eventsstatements.
 To pass additional arguments to specific exporter you need to add it separately e.g.:
-pmm-admin add linux:metrics --  --collect.perf_schema.eventsstatements
+ssm-admin add linux:metrics --  --collect.perf_schema.eventsstatements
 or
-pmm-admin add mysql:metrics --  --collect.perf_schema.eventsstatements
+ssm-admin add mysql:metrics --  --collect.perf_schema.eventsstatements
 `
 	assertRegexpLines(t, expected, string(output))
 }
@@ -1615,14 +1615,14 @@ func testAddMySQLQueryWithAdditionalParamsErr(t *testing.T, data pmmAdminData) {
 		"mysql:queries",
 		"--user", "root",
 		"--port", "3306", // MySQL instance with performance_schema enabled.
-		"--host", "127.0.0.1", // Force pmm-admin to ignore auto detection, otherwise it tries to connect to socket.
+		"--host", "127.0.0.1", // Force ssm-admin to ignore auto detection, otherwise it tries to connect to socket.
 		"--", "--collect.perf_schema.eventsstatements",
 	)
 
 	output, err := cmd.CombinedOutput()
 	assert.Error(t, err)
-	expected := `Command pmm-admin add mysql:queries does not accept additional flags: --collect.perf_schema.eventsstatements.
-Type pmm-admin add mysql:queries --help to see all acceptable flags.
+	expected := `Command ssm-admin add mysql:queries does not accept additional flags: --collect.perf_schema.eventsstatements.
+Type ssm-admin add mysql:queries --help to see all acceptable flags.
 `
 	assertRegexpLines(t, expected, string(output))
 }
@@ -1681,7 +1681,7 @@ func testAddMySQLMetrics(t *testing.T, data pmmAdminData) {
 		"mysql:metrics",
 		"--user", "root",
 		"--port", "3306", // MySQL instance with performance_schema enabled.
-		"--host", "127.0.0.1", // Force pmm-admin to ignore auto detection, otherwise it tries to connect to socket.
+		"--host", "127.0.0.1", // Force ssm-admin to ignore auto detection, otherwise it tries to connect to socket.
 	)
 
 	output, err := cmd.CombinedOutput()
@@ -1745,7 +1745,7 @@ func testAddMySQLMetricsErr(t *testing.T, data pmmAdminData) {
 		"mysql:metrics",
 		"--user", "bad-credentials",
 		"--port", "3306", // MySQL instance with performance_schema enabled.
-		"--host", "127.0.0.1", // Force pmm-admin to ignore auto detection, otherwise it tries to connect to socket.
+		"--host", "127.0.0.1", // Force ssm-admin to ignore auto detection, otherwise it tries to connect to socket.
 	)
 
 	output, err := cmd.CombinedOutput()
@@ -1760,7 +1760,7 @@ Use additional flags --user, --password, --host, --port, --socket if needed.
 
 func testAddMySQLWithCreateUser(t *testing.T, data pmmAdminData) {
 	t.Skip(`
-		pmm-admin restricts user to connect only from 127.0.0.1 if it detects it's localhost.
+		ssm-admin restricts user to connect only from 127.0.0.1 if it detects it's localhost.
 		However IP received by MySQL in docker container is not 127.0.0.1
 		but it's an ip of the bridge e.g. 172.20.0.1 https://github.com/docker/for-mac/issues/180
 		As a result connection from 172.20.0.1 gets rejected and this test fails.
@@ -1818,7 +1818,7 @@ func testAddMySQLWithCreateUser(t *testing.T, data pmmAdminData) {
 		"mysql",
 		"--user", "root",
 		"--port", "3306", // MySQL instance with performance_schema enabled.
-		"--host", "127.0.0.1", // Force pmm-admin to ignore auto detection, otherwise it tries to connect to socket.
+		"--host", "127.0.0.1", // Force ssm-admin to ignore auto detection, otherwise it tries to connect to socket.
 		"--create-user",
 		"--force",
 	)
@@ -1916,7 +1916,7 @@ func testAddMySQLWithDisableSlowLogsRotation(t *testing.T, data pmmAdminData) {
 			"mysql",
 			"--user", "root",
 			"--port", "3307", // MySQL instance with slow query log enabled.
-			"--host", "127.0.0.1", // Force pmm-admin to ignore auto detection, otherwise it tries to connect to socket.
+			"--host", "127.0.0.1", // Force ssm-admin to ignore auto detection, otherwise it tries to connect to socket.
 			"--query-source=slowlog", // Force using slow query log.
 			"--slow-log-rotation=false",
 		)
@@ -2027,7 +2027,7 @@ func testAddMySQLWithRetainSlowLogs(t *testing.T, data pmmAdminData) {
 			"mysql",
 			"--user", "root",
 			"--port", "3307", // MySQL instance with slow query log enabled.
-			"--host", "127.0.0.1", // Force pmm-admin to ignore auto detection, otherwise it tries to connect to socket.
+			"--host", "127.0.0.1", // Force ssm-admin to ignore auto detection, otherwise it tries to connect to socket.
 			"--query-source=slowlog", // Force using slow query log.
 			"--retain-slow-logs=42",
 		)
@@ -2183,9 +2183,9 @@ func testAddMongoDBAdditionalParamsErr(t *testing.T, data pmmAdminData) {
 	assert.Error(t, err)
 	expected := `We can't determine which exporter should receive additional flags: --collect.mongo.attrs.
 To pass additional arguments to specific exporter you need to add it separately e.g.:
-pmm-admin add linux:metrics --  --collect.mongo.attrs
+ssm-admin add linux:metrics --  --collect.mongo.attrs
 or
-pmm-admin add mongodb:metrics --  --collect.mongo.attrs
+ssm-admin add mongodb:metrics --  --collect.mongo.attrs
 `
 	assertRegexpLines(t, expected, string(output))
 }
@@ -2434,8 +2434,8 @@ func testAddMongoDBQueriesWithAdditionalParamsErr(t *testing.T, data pmmAdminDat
 
 	output, err := cmd.CombinedOutput()
 	assert.Error(t, err)
-	expected := `Command pmm-admin add mongodb:queries does not accept additional flags: --collect.mongo.attrs.
-Type pmm-admin add mongodb:queries --help to see all acceptable flags.
+	expected := `Command ssm-admin add mongodb:queries does not accept additional flags: --collect.mongo.attrs.
+Type ssm-admin add mongodb:queries --help to see all acceptable flags.
 `
 	assertRegexpLines(t, expected, string(output))
 }
@@ -2494,7 +2494,7 @@ func createFakeENV(t *testing.T, data pmmAdminData) {
 		filepath.Join(data.rootDir, pmm.PMMBaseDir, "mysqld_exporter"),
 		filepath.Join(data.rootDir, pmm.PMMBaseDir, "postgres_exporter"),
 		filepath.Join(data.rootDir, pmm.PMMBaseDir, "proxysql_exporter"),
-		filepath.Join(data.rootDir, pmm.AgentBaseDir, "bin", "percona-qan-agent"),
+		filepath.Join(data.rootDir, pmm.AgentBaseDir, "bin", "ssm-qan-agent"),
 	}
 
 	for _, file := range files {
@@ -2531,12 +2531,12 @@ EOF`)
 	err = os.Chmod(filepath.Join(data.rootDir, pmm.PMMBaseDir, "mongodb_exporter"), 0777)
 	assert.NoError(t, err)
 
-	f, err = os.Create(filepath.Join(data.rootDir, pmm.AgentBaseDir, "bin/percona-qan-agent-installer"))
+	f, err = os.Create(filepath.Join(data.rootDir, pmm.AgentBaseDir, "bin/ssm-qan-agent-installer"))
 	assert.NoError(t, err)
 	fmt.Fprintln(f, "#!/bin/sh")
 	fmt.Fprintln(f, "echo 'it works'")
 	f.Close()
-	err = os.Chmod(filepath.Join(data.rootDir, pmm.AgentBaseDir, "bin/percona-qan-agent-installer"), 0777)
+	err = os.Chmod(filepath.Join(data.rootDir, pmm.AgentBaseDir, "bin/ssm-qan-agent-installer"), 0777)
 	assert.NoError(t, err)
 
 	f, err = os.Create(filepath.Join(data.rootDir, pmm.AgentBaseDir, "config/agent.conf"))

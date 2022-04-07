@@ -8,7 +8,7 @@ WORKSPACE=$PWD
 SOURCE=$PWD/distro
 TARGET=$PWD/distro
 
-PROJECT=pmm-client
+PROJECT=ssm-client
 VERSION="$(cat VERSION)"
 RELEASE=${1:-1}
 ARCH=x86_64

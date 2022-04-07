@@ -30,8 +30,8 @@ import (
 	"strings"
 
 	consul "github.com/hashicorp/consul/api"
-	"github.com/percona/pmm/proto"
-	protocfg "github.com/percona/pmm/proto/config"
+	"github.com/shatteredsilicon/ssm/proto"
+	protocfg "github.com/shatteredsilicon/ssm/proto/config"
 	"gopkg.in/yaml.v2"
 )
 
@@ -48,7 +48,7 @@ type Config struct {
 	ServerInsecureSSL bool   `yaml:"server_insecure_ssl,omitempty"`
 }
 
-// LoadConfig read PMM client config file.
+// LoadConfig read SSM client config file.
 func (a *Admin) LoadConfig() error {
 	a.Config = &Config{}
 	if !FileExists(ConfigFile) {
@@ -69,7 +69,7 @@ func (a *Admin) LoadConfig() error {
 	return nil
 }
 
-// SetConfig configure PMM client, check connectivity and write the config.
+// SetConfig configure SSM client, check connectivity and write the config.
 func (a *Admin) SetConfig(cf Config, flagForce bool) error {
 	// Server options.
 	if cf.ServerSSL && cf.ServerInsecureSSL {
@@ -128,7 +128,7 @@ It has the active services so this name is not available.
 
 Specify the other one using --client-name flag.
 
-In case this is the correct client node that was previously uninstalled with unreachable PMM server,
+In case this is the correct client node that was previously uninstalled with unreachable SSM server,
 you can add --force flag to proceed further. Do not use this flag otherwise.
 The orphaned remote services will be removed automatically.`,
 					a.Config.ClientName, node.Node.Address)
@@ -239,8 +239,8 @@ This usually happens when client and server are on the different networks.
 Use --bind-address flag to set locally bound address, usually a private one, while client address is public.
 The bind address should correspond to the detected client address via NAT and you would need to configure port forwarding.
 
-PMM server should be able to connect to the client address '%s' which should translate to a local bind address.
-What ports to map you can find from "pmm-admin check-network" output once you add instances to the monitoring.`,
+SSM server should be able to connect to the client address '%s' which should translate to a local bind address.
+What ports to map you can find from "ssm-admin check-network" output once you add instances to the monitoring.`,
 				a.Config.BindAddress, a.Config.ClientAddress)
 		}
 		return fmt.Errorf(`Client Address: %s
@@ -252,8 +252,8 @@ Use --bind-address flag to set locally bound address, usually a private one,
 and --client-address flag to set the corresponding remote address, usually a public one.
 The bind address should correspond to the client address via NAT and you would need to configure port forwarding.
 
-PMM server should be able to connect to the client address which should translate to a local bind address.
-What ports to map you can find from "pmm-admin check-network" output once you add instances to the monitoring.`,
+SSM server should be able to connect to the client address which should translate to a local bind address.
+What ports to map you can find from "ssm-admin check-network" output once you add instances to the monitoring.`,
 			a.Config.ClientAddress, a.Config.BindAddress)
 	}
 

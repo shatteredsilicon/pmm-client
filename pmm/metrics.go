@@ -24,7 +24,7 @@ import (
 
 	consul "github.com/hashicorp/consul/api"
 	service "github.com/percona/kardianos-service"
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
 )
 
 // AddMetrics add metrics service to monitoring.
@@ -128,7 +128,7 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 
 	// Add additional args passed by plugin.
 	args = append(args, m.Args()...)
-	// Add additional args passed to pmm-admin.
+	// Add additional args passed to ssm-admin.
 	args = append(args, a.Args...)
 
 	_, executable := filepath.Split(m.Executable())
@@ -138,9 +138,9 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 
 	// Install and start service via platform service manager.
 	svcConfig := &service.Config{
-		Name:        fmt.Sprintf("pmm-%s-metrics-%d", m.Name(), port),
-		DisplayName: fmt.Sprintf("PMM Prometheus %s on port %d", m.Executable(), port),
-		Description: fmt.Sprintf("PMM Prometheus %s on port %d", m.Executable(), port),
+		Name:        fmt.Sprintf("ssm-%s-metrics-%d", m.Name(), port),
+		DisplayName: fmt.Sprintf("SSM Prometheus %s on port %d", m.Executable(), port),
+		Description: fmt.Sprintf("SSM Prometheus %s on port %d", m.Executable(), port),
 		Executable:  filepath.Join(PMMBaseDir, executable),
 		Arguments:   args,
 	}

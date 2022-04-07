@@ -3,9 +3,9 @@ package queries
 import (
 	"context"
 
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin/mongodb"
-	pc "github.com/percona/pmm/proto/config"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin/mongodb"
+	pc "github.com/shatteredsilicon/ssm/proto/config"
 )
 
 var _ plugin.Queries = (*Queries)(nil)
