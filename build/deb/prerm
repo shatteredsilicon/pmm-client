@@ -1,5 +1,0 @@
-#!/bin/bash
-# uninstall
-if [ "$1" = "remove" ]; then
-    pmm-admin uninstall
-fi
