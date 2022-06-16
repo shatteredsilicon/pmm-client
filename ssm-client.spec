@@ -70,6 +70,7 @@ strip %{_GOPATH}/bin/* || true
 
 %{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/example.prom		%{_builddir}/ssm-client/
 %{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/queries-mysqld.yml	%{_builddir}/ssm-client/
+%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/ssm-client/scripts/ssm-dashboard	%{_builddir}/ssm-client/
 
 %install
 %if 0%{?rhel} == 5
@@ -93,6 +94,7 @@ install -m 0755 %{_GOPATH}/bin/ssm-qan-agent $RPM_BUILD_ROOT/opt/ss/qan-agent/bi
 install -m 0755 %{_GOPATH}/bin/ssm-qan-agent-installer $RPM_BUILD_ROOT/opt/ss/qan-agent/bin/
 install -m 0644 %{_builddir}/ssm-client/queries-mysqld.yml $RPM_BUILD_ROOT/opt/ss/ssm-client
 install -m 0755 %{_builddir}/ssm-client/example.prom $RPM_BUILD_ROOT/opt/ss/ssm-client/textfile-collector/
+install -m 0755 %{_builddir}/ssm-client/ssm-dashboard $RPM_BUILD_ROOT/opt/ss/ssm-client/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
