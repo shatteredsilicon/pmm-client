@@ -31,18 +31,18 @@ const (
 )
 
 var (
-	// you can use `-ldflags -X github.com/shatteredsilicon/pmm-client/pmm.Version=`
+	// you can use `-ldflags -X github.com/shatteredsilicon/ssm-client/pmm.Version=`
 	// to set build version number
 	Version = "1.17.4"
 
-	// you can use `-ldflags -X github.com/shatteredsilicon/pmm-client/pmm.RootDir=`
-	// to set root filesystem for pmm-admin
+	// you can use `-ldflags -X github.com/shatteredsilicon/ssm-client/pmm.RootDir=`
+	// to set root filesystem for ssm-admin
 	RootDir = ""
 
-	PMMBaseDir   = RootDir + "/usr/local/percona/pmm-client"
-	AgentBaseDir = RootDir + "/usr/local/percona/qan-agent"
+	PMMBaseDir   = RootDir + "/opt/ss/ssm-client"
+	AgentBaseDir = RootDir + "/opt/ss/qan-agent"
 
-	ConfigFile  = fmt.Sprintf("%s/pmm.yml", PMMBaseDir)
+	ConfigFile  = fmt.Sprintf("%s/ssm.yml", PMMBaseDir)
 	SSLCertFile = fmt.Sprintf("%s/server.crt", PMMBaseDir)
 	SSLKeyFile  = fmt.Sprintf("%s/server.key", PMMBaseDir)
 

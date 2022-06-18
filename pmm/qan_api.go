@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shatteredsilicon/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/ssm-client/pmm/utils"
 )
 
 type API struct {

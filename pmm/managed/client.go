@@ -29,7 +29,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/shatteredsilicon/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/ssm-client/pmm/utils"
 )
 
 const (

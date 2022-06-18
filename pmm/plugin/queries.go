@@ -3,7 +3,7 @@ package plugin
 import (
 	"context"
 
-	pc "github.com/percona/pmm/proto/config"
+	pc "github.com/shatteredsilicon/ssm/proto/config"
 )
 
 // QueriesFlags Queries specific flags.

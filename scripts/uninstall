@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-pmm-admin uninstall
+ssm-admin uninstall
 
-rm -f /usr/sbin/pmm-admin
-rm -rf /usr/local/percona/pmm-client
-rm -rf /usr/local/percona/qan-agent
+rm -f /usr/sbin/ssm-admin
+rm -rf /opt/ss/ssm-client
+rm -rf /opt/ss/qan-agent
 
 echo "Uninstall complete."

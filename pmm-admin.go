@@ -27,22 +27,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shatteredsilicon/pmm-client/pmm"
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
-	linuxMetrics "github.com/shatteredsilicon/pmm-client/pmm/plugin/linux/metrics"
-	mongodbMetrics "github.com/shatteredsilicon/pmm-client/pmm/plugin/mongodb/metrics"
-	mongodbQueries "github.com/shatteredsilicon/pmm-client/pmm/plugin/mongodb/queries"
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin/mysql"
-	mysqlMetrics "github.com/shatteredsilicon/pmm-client/pmm/plugin/mysql/metrics"
-	mysqlQueries "github.com/shatteredsilicon/pmm-client/pmm/plugin/mysql/queries"
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin/postgresql"
-	postgresqlMetrics "github.com/shatteredsilicon/pmm-client/pmm/plugin/postgresql/metrics"
-	proxysqlMetrics "github.com/shatteredsilicon/pmm-client/pmm/plugin/proxysql/metrics"
-	"github.com/shatteredsilicon/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/ssm-client/pmm"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
+	linuxMetrics "github.com/shatteredsilicon/ssm-client/pmm/plugin/linux/metrics"
+	mongodbMetrics "github.com/shatteredsilicon/ssm-client/pmm/plugin/mongodb/metrics"
+	mongodbQueries "github.com/shatteredsilicon/ssm-client/pmm/plugin/mongodb/queries"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin/mysql"
+	mysqlMetrics "github.com/shatteredsilicon/ssm-client/pmm/plugin/mysql/metrics"
+	mysqlQueries "github.com/shatteredsilicon/ssm-client/pmm/plugin/mysql/queries"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin/postgresql"
+	postgresqlMetrics "github.com/shatteredsilicon/ssm-client/pmm/plugin/postgresql/metrics"
+	proxysqlMetrics "github.com/shatteredsilicon/ssm-client/pmm/plugin/proxysql/metrics"
+	"github.com/shatteredsilicon/ssm-client/pmm/utils"
 	"github.com/spf13/cobra"
 )
 
-// Context used to cancel pmm-admin command if it runs for too long.
+// Context used to cancel ssm-admin command if it runs for too long.
 // Cobra library doesn't help with passing context: https://github.com/spf13/cobra/issues/563
 var (
 	ctx    context.Context
@@ -53,14 +53,14 @@ var (
 	admin pmm.Admin
 
 	rootCmd = &cobra.Command{
-		Use: "pmm-admin",
+		Use: "ssm-admin",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			ctx, cancel = context.WithTimeout(context.Background(), flagTimeout)
 
 			if !admin.SkipAdmin && os.Getuid() != 0 {
 				// skip root check if binary was build in tests
 				if pmm.Version != "gotest" {
-					fmt.Println("pmm-admin requires superuser privileges to manage system services.")
+					fmt.Println("ssm-admin requires superuser privileges to manage system services.")
 					os.Exit(1)
 				}
 			}
@@ -106,7 +106,7 @@ var (
 
 			// Read config file.
 			if !pmm.FileExists(pmm.ConfigFile) {
-				fmt.Println("PMM client is not configured, missing config file. Please make sure you have run 'pmm-admin config'.")
+				fmt.Println("SSM client is not configured, missing config file. Please make sure you have run 'ssm-admin config'.")
 				os.Exit(1)
 			}
 
@@ -118,7 +118,7 @@ var (
 			// Check for required settings in config file
 			// optional settings are marked with "omitempty"
 			if admin.Config.ServerAddress == "" || admin.Config.ClientName == "" || admin.Config.ClientAddress == "" || admin.Config.BindAddress == "" {
-				fmt.Println("PMM client is not configured properly. Please make sure you have run 'pmm-admin config'.")
+				fmt.Println("SSM client is not configured properly. Please make sure you have run 'ssm-admin config'.")
 				os.Exit(1)
 			}
 
@@ -144,13 +144,13 @@ var (
 				os.Exit(1)
 			}
 
-			// Proceed to "pmm-admin repair" if requested.
+			// Proceed to "ssm-admin repair" if requested.
 			if cmd.Name() == "repair" {
 				return
 			}
 
 			if pmm.Version != "gotest" {
-				// Check PMM-Server and PMM-Client versions
+				// Check SSM-Server and SSM-Client versions
 				if fatal, err := admin.CheckVersion(ctx); err != nil {
 					fmt.Printf("%s\n", err)
 					if fatal {
@@ -162,24 +162,24 @@ var (
 			// Check for broken installation.
 			orphanedServices, missingServices := admin.CheckInstallation()
 			if len(orphanedServices) > 0 {
-				fmt.Printf(`We have found system services disconnected from PMM server.
+				fmt.Printf(`We have found system services disconnected from SSM server.
 Usually, this happens when data container is wiped before all monitoring services are removed or client is uninstalled.
 
 Orphaned local services: %s
 
-To continue, run 'pmm-admin repair' to remove orphaned services.
+To continue, run 'ssm-admin repair' to remove orphaned services.
 `, strings.Join(orphanedServices, ", "))
 				os.Exit(1)
 			}
 			if len(missingServices) > 0 {
-				fmt.Printf(`PMM server reports services that are missing locally.
+				fmt.Printf(`SSM server reports services that are missing locally.
 Usually, this happens when the system is completely reinstalled.
 
 Orphaned remote services: %s
 
 Beware, if another system with the same client name created those services, repairing the installation will remove remote services
 and the other system will be left with orphaned local services. If you are sure there is no other system with the same name,
-run 'pmm-admin repair' to remove orphaned services. Otherwise, please reinstall this client.
+run 'ssm-admin repair' to remove orphaned services. Otherwise, please reinstall this client.
 `, strings.Join(missingServices, ", "))
 				os.Exit(1)
 			}
@@ -197,7 +197,7 @@ run 'pmm-admin repair' to remove orphaned services. Otherwise, please reinstall 
 		Use:     "summary",
 		Short:   "Fetch system data for diagnostics.",
 		Long:    "Collect data for Support Engineers to review when troubleshooting pmm-client cases",
-		Example: `  pmm-admin summary `,
+		Example: `  ssm-admin summary `,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.CollectSummary(); err != nil {
 				fmt.Println("Error requesting summary. Error message is: ", err)
@@ -248,8 +248,8 @@ run 'pmm-admin repair' to remove orphaned services. Otherwise, please reinstall 
 	cmdAnnotate = &cobra.Command{
 		Use:     "annotate TEXT",
 		Short:   "Annotate application events.",
-		Long:    "Publish Application Events as Annotations to PMM Server.",
-		Example: `  pmm-admin annotate "Application deploy v1.2" --tags "UI, v1.2"`,
+		Long:    "Publish Application Events as Annotations to SSM Server.",
+		Example: `  ssm-admin annotate "Application deploy v1.2" --tags "UI, v1.2"`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) < 1 {
 				fmt.Println("Description of annotation is required")
@@ -272,7 +272,7 @@ You cannot monitor linux metrics from remote machines because the metric exporte
 It is supposed there could be only one instance of linux metrics being monitored for this system.
 However, you can add another one with the different name just for testing purposes using --force flag.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -291,24 +291,24 @@ However, you can add another one with the different name just for testing purpos
 		Long: `This command adds the given MySQL instance to system, metrics and queries monitoring.
 
 When adding a MySQL instance, this tool tries to auto-detect the DSN and credentials.
-If you want to create a new user to be used for metrics collecting, provide --create-user option. pmm-admin will create
+If you want to create a new user to be used for metrics collecting, provide --create-user option. ssm-admin will create
 a new user 'pmm@' automatically using the given (auto-detected) MySQL credentials for granting purpose.
 
 Table statistics is automatically disabled when there are more than 10000 tables on MySQL.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin add mysql --password abc123
-  pmm-admin add mysql --password abc123 --create-user
-  pmm-admin add mysql --password abc123 --port 3307 instance3307`,
+		Example: `  ssm-admin add mysql --password abc123
+  ssm-admin add mysql --password abc123 --create-user
+  ssm-admin add mysql --password abc123 --port 3307 instance3307`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Passing additional arguments doesn't make sense because this command enables multiple exporters.
 			if len(admin.Args) > 0 {
 				fmt.Printf("We can't determine which exporter should receive additional flags: %s.\n", strings.Join(admin.Args, ", "))
 				fmt.Println("To pass additional arguments to specific exporter you need to add it separately e.g.:")
-				fmt.Println("pmm-admin add linux:metrics -- ", strings.Join(admin.Args, " "))
+				fmt.Println("ssm-admin add linux:metrics -- ", strings.Join(admin.Args, " "))
 				fmt.Println("or")
-				fmt.Println("pmm-admin add mysql:metrics -- ", strings.Join(admin.Args, " "))
+				fmt.Println("ssm-admin add mysql:metrics -- ", strings.Join(admin.Args, " "))
 				os.Exit(1)
 			}
 
@@ -359,20 +359,20 @@ Table statistics is automatically disabled when there are more than 10000 tables
 		Long: `This command adds the given MySQL instance to metrics monitoring.
 
 When adding a MySQL instance, this tool tries to auto-detect the DSN and credentials.
-If you want to create a new user to be used for metrics collecting, provide --create-user option. pmm-admin will create
+If you want to create a new user to be used for metrics collecting, provide --create-user option. ssm-admin will create
 a new user 'pmm@' automatically using the given (auto-detected) MySQL credentials for granting purpose.
 
 Table statistics is automatically disabled when there are more than 10000 tables on MySQL.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
 		`,
-		Example: `  pmm-admin add mysql:metrics --password abc123
-  pmm-admin add mysql:metrics --password abc123 --create-user
-  pmm-admin add mysql:metrics --password abc123 --port 3307 instance3307
-  pmm-admin add mysql:metrics --user rdsuser --password abc123 --host my-rds.1234567890.us-east-1.rds.amazonaws.com my-rds
-  pmm-admin add mysql:metrics -- --collect.perf_schema.eventsstatements
-  pmm-admin add mysql:metrics -- --collect.perf_schema.eventswaits=false`,
+		Example: `  ssm-admin add mysql:metrics --password abc123
+  ssm-admin add mysql:metrics --password abc123 --create-user
+  ssm-admin add mysql:metrics --password abc123 --port 3307 instance3307
+  ssm-admin add mysql:metrics --user rdsuser --password abc123 --host my-rds.1234567890.us-east-1.rds.amazonaws.com my-rds
+  ssm-admin add mysql:metrics -- --collect.perf_schema.eventsstatements
+  ssm-admin add mysql:metrics -- --collect.perf_schema.eventswaits=false`,
 		Run: func(cmd *cobra.Command, args []string) {
 			mysqlMetrics := mysqlMetrics.New(flagMySQLMetrics, flagMySQL)
 			info, err := admin.AddMetrics(ctx, mysqlMetrics, false, flagDisableSSL)
@@ -389,20 +389,20 @@ Table statistics is automatically disabled when there are more than 10000 tables
 		Long: `This command adds the given MySQL instance to Query Analytics.
 
 When adding a MySQL instance, this tool tries to auto-detect the DSN and credentials.
-If you want to create a new user to be used for query collecting, provide --create-user option. pmm-admin will create
+If you want to create a new user to be used for query collecting, provide --create-user option. ssm-admin will create
 a new user 'pmm@' automatically using the given (auto-detected) MySQL credentials for granting purpose.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin add mysql:queries --password abc123
-  pmm-admin add mysql:queries --password abc123 --create-user
-  pmm-admin add mysql:metrics --password abc123 --port 3307 instance3307
-  pmm-admin add mysql:queries --user rdsuser --password abc123 --host my-rds.1234567890.us-east-1.rds.amazonaws.com my-rds`,
+		Example: `  ssm-admin add mysql:queries --password abc123
+  ssm-admin add mysql:queries --password abc123 --create-user
+  ssm-admin add mysql:metrics --password abc123 --port 3307 instance3307
+  ssm-admin add mysql:queries --user rdsuser --password abc123 --host my-rds.1234567890.us-east-1.rds.amazonaws.com my-rds`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Agent does not accept additional arguments, we start it through qan-api.
 			if len(admin.Args) > 0 {
-				msg := `Command pmm-admin add mysql:queries does not accept additional flags: %s.
-Type pmm-admin add mysql:queries --help to see all acceptable flags.
+				msg := `Command ssm-admin add mysql:queries does not accept additional flags: %s.
+Type ssm-admin add mysql:queries --help to see all acceptable flags.
 `
 				fmt.Printf(msg, strings.Join(admin.Args, ", "))
 				os.Exit(1)
@@ -429,22 +429,22 @@ Type pmm-admin add mysql:queries --help to see all acceptable flags.
 		Long: `This command adds the given PostgreSQL instance to system and metrics monitoring.
 
 When adding a PostgreSQL instance, this tool tries to auto-detect the DSN and credentials.
-If you want to create a new user to be used for metrics collecting, provide --create-user option. pmm-admin will create
+If you want to create a new user to be used for metrics collecting, provide --create-user option. ssm-admin will create
 a new user 'pmm' automatically using the given (auto-detected) PostgreSQL credentials for granting purpose.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin add postgresql --password abc123
-  pmm-admin add postgresql --password abc123 --create-user
-  pmm-admin add postgresql --password abc123 --port 3307 instance3307`,
+		Example: `  ssm-admin add postgresql --password abc123
+  ssm-admin add postgresql --password abc123 --create-user
+  ssm-admin add postgresql --password abc123 --port 3307 instance3307`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Passing additional arguments doesn't make sense because this command enables multiple exporters.
 			if len(admin.Args) > 0 {
 				fmt.Printf("We can't determine which exporter should receive additional flags: %s.\n", strings.Join(admin.Args, ", "))
 				fmt.Println("To pass additional arguments to specific exporter you need to add it separately e.g.:")
-				fmt.Println("pmm-admin add linux:metrics -- ", strings.Join(admin.Args, " "))
+				fmt.Println("ssm-admin add linux:metrics -- ", strings.Join(admin.Args, " "))
 				fmt.Println("or")
-				fmt.Println("pmm-admin add postgresql:metrics -- ", strings.Join(admin.Args, " "))
+				fmt.Println("ssm-admin add postgresql:metrics -- ", strings.Join(admin.Args, " "))
 				os.Exit(1)
 			}
 
@@ -477,17 +477,17 @@ a new user 'pmm' automatically using the given (auto-detected) PostgreSQL creden
 		Long: `This command adds the given PostgreSQL instance to metrics monitoring.
 
 When adding a PostgreSQL instance, this tool tries to auto-detect the DSN and credentials.
-If you want to create a new user to be used for metrics collecting, provide --create-user option. pmm-admin will create
+If you want to create a new user to be used for metrics collecting, provide --create-user option. ssm-admin will create
 a new user 'pmm' automatically using the given (auto-detected) PostgreSQL credentials for granting purpose.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
 		`,
-		Example: `  pmm-admin add postgresql:metrics --password abc123
-  pmm-admin add postgresql:metrics --password abc123 --create-user
-  pmm-admin add postgresql:metrics --password abc123 --port 3307 instance3307
-  pmm-admin add postgresql:metrics --user rdsuser --password abc123 --host my-rds.1234567890.us-east-1.rds.amazonaws.com my-rds
-  pmm-admin add postgresql:metrics -- --extend.query-path /path/to/queries.yaml`,
+		Example: `  ssm-admin add postgresql:metrics --password abc123
+  ssm-admin add postgresql:metrics --password abc123 --create-user
+  ssm-admin add postgresql:metrics --password abc123 --port 3307 instance3307
+  ssm-admin add postgresql:metrics --user rdsuser --password abc123 --host my-rds.1234567890.us-east-1.rds.amazonaws.com my-rds
+  ssm-admin add postgresql:metrics -- --extend.query-path /path/to/queries.yaml`,
 		Run: func(cmd *cobra.Command, args []string) {
 			postgresqlMetrics := postgresqlMetrics.New(flagPostgreSQL)
 			info, err := admin.AddMetrics(ctx, postgresqlMetrics, false, flagDisableSSL)
@@ -506,18 +506,18 @@ a new user 'pmm' automatically using the given (auto-detected) PostgreSQL creden
 
 When adding a MongoDB instance, you may provide --uri if the default one does not work for you.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin add mongodb
-  pmm-admin add mongodb --cluster bare-metal`,
+		Example: `  ssm-admin add mongodb
+  ssm-admin add mongodb --cluster bare-metal`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Passing additional arguments doesn't make sense because this command enables multiple exporters.
 			if len(admin.Args) > 0 {
 				fmt.Printf("We can't determine which exporter should receive additional flags: %s.\n", strings.Join(admin.Args, ", "))
 				fmt.Println("To pass additional arguments to specific exporter you need to add it separately e.g.:")
-				fmt.Println("pmm-admin add linux:metrics -- ", strings.Join(admin.Args, " "))
+				fmt.Println("ssm-admin add linux:metrics -- ", strings.Join(admin.Args, " "))
 				fmt.Println("or")
-				fmt.Println("pmm-admin add mongodb:metrics -- ", strings.Join(admin.Args, " "))
+				fmt.Println("ssm-admin add mongodb:metrics -- ", strings.Join(admin.Args, " "))
 				os.Exit(1)
 			}
 
@@ -565,12 +565,12 @@ When adding a MongoDB instance, you may provide --uri if the default one does no
 
 When adding a MongoDB instance, you may provide --uri if the default one does not work for you.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
 		`,
-		Example: `  pmm-admin add mongodb:metrics
-  pmm-admin add mongodb:metrics --cluster bare-metal
-  pmm-admin add mongodb:metrics -- --mongodb.tls`,
+		Example: `  ssm-admin add mongodb:metrics
+  ssm-admin add mongodb:metrics --cluster bare-metal
+  ssm-admin add mongodb:metrics -- --mongodb.tls`,
 		Run: func(cmd *cobra.Command, args []string) {
 			mongodbMetrics := mongodbMetrics.New(flagMongoURI, admin.Args, flagCluster, pmm.PMMBaseDir)
 			info, err := admin.AddMetrics(ctx, mongodbMetrics, false, flagDisableSSL)
@@ -588,15 +588,15 @@ When adding a MongoDB instance, you may provide --uri if the default one does no
 
 When adding a MongoDB instance, you may provide --uri if the default one does not work for you.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin add mongodb:queries
-  pmm-admin add mongodb:queries`,
+		Example: `  ssm-admin add mongodb:queries
+  ssm-admin add mongodb:queries`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Agent does not accept additional arguments, we start it through qan-api.
 			if len(admin.Args) > 0 {
-				msg := `Command pmm-admin add mongodb:queries does not accept additional flags: %s.
-Type pmm-admin add mongodb:queries --help to see all acceptable flags.
+				msg := `Command ssm-admin add mongodb:queries does not accept additional flags: %s.
+Type ssm-admin add mongodb:queries --help to see all acceptable flags.
 `
 				fmt.Printf(msg, strings.Join(admin.Args, ", "))
 				os.Exit(1)
@@ -620,17 +620,17 @@ Type pmm-admin add mongodb:queries --help to see all acceptable flags.
 
 When adding a ProxySQL instance, you may provide --dsn if the default one does not work for you.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin add proxysql --dsn "stats:stats@tcp(localhost:6032)/"`,
+		Example: `  ssm-admin add proxysql --dsn "stats:stats@tcp(localhost:6032)/"`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Passing additional arguments doesn't make sense because this command enables multiple exporters.
 			if len(admin.Args) > 0 {
 				fmt.Printf("We can't determine which exporter should receive additional flags: %s.\n", strings.Join(admin.Args, ", "))
 				fmt.Println("To pass additional arguments to specific exporter you need to add it separately e.g.:")
-				fmt.Println("pmm-admin add linux:metrics -- ", strings.Join(admin.Args, " "))
+				fmt.Println("ssm-admin add linux:metrics -- ", strings.Join(admin.Args, " "))
 				fmt.Println("or")
-				fmt.Println("pmm-admin add proxysql:metrics -- ", strings.Join(admin.Args, " "))
+				fmt.Println("ssm-admin add proxysql:metrics -- ", strings.Join(admin.Args, " "))
 				os.Exit(1)
 			}
 
@@ -659,7 +659,7 @@ When adding a ProxySQL instance, you may provide --dsn if the default one does n
 		Short: "Add ProxySQL instance to metrics monitoring.",
 		Long: `This command adds the given ProxySQL instance to metrics monitoring.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -677,9 +677,9 @@ When adding a ProxySQL instance, you may provide --dsn if the default one does n
 		Short: "Add external Prometheus exporter running on this host to new or existing scrape job for metrics monitoring.",
 		Long: `Add external Prometheus exporter running on this host to new or existing scrape job for metrics monitoring.
 
-[instance] is an optional argument, by default it is set to the client name of this PMM client.
+[instance] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: "pmm-admin add external:service postgresql --service-port=9187 --timeout=10s",
+		Example: "ssm-admin add external:service postgresql --service-port=9187 --timeout=10s",
 		Args:    cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
 			if flagServicePort == 0 {
@@ -719,7 +719,7 @@ When adding a ProxySQL instance, you may provide --dsn if the default one does n
 
 An optional list of instances (scrape targets) can be provided.
 		`,
-		Example: "pmm-admin add external:service postgresql --service-port=9187 --timeout=10s",
+		Example: "ssm-admin add external:service postgresql --service-port=9187 --timeout=10s",
 		Args:    cobra.MinimumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			if flagServicePort != 0 {
@@ -851,7 +851,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove all monitoring for MySQL instance (linux and mysql metrics, queries).",
 		Long: `This command removes all monitoring for MySQL instance (linux and mysql metrics, queries).
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			err := admin.RemoveMetrics("linux")
@@ -887,7 +887,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove this system from metrics monitoring.",
 		Long: `This command removes this system from linux metrics monitoring.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.RemoveMetrics("linux"); err != nil {
@@ -902,7 +902,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove MySQL instance from metrics monitoring.",
 		Long: `This command removes MySQL instance from metrics monitoring.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.RemoveMetrics("mysql"); err != nil {
@@ -917,7 +917,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove MySQL instance from Query Analytics.",
 		Long: `This command removes MySQL instance from Query Analytics.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.RemoveQueries("mysql"); err != nil {
@@ -932,7 +932,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove all monitoring for MongoDB instance (linux and mongodb metrics).",
 		Long: `This command removes all monitoring for MongoDB instance (linux and mongodb metrics).
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			err := admin.RemoveMetrics("linux")
@@ -968,7 +968,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove MongoDB instance from metrics monitoring.",
 		Long: `This command removes MongoDB instance from metrics monitoring.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.RemoveMetrics("mongodb"); err != nil {
@@ -983,7 +983,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove MongoDB instance from Query Analytics.",
 		Long: `This command removes MongoDB instance from Query Analytics.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.RemoveQueries("mongodb"); err != nil {
@@ -998,7 +998,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove all monitoring for PostgreSQL instance (linux and postgresql metrics).",
 		Long: `This command removes all monitoring for PostgreSQL instance (linux and mysql metrics).
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			err := admin.RemoveMetrics("linux")
@@ -1025,7 +1025,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove PostgreSQL instance from metrics monitoring.",
 		Long: `This command removes PostgreSQL instance from metrics monitoring.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.RemoveMetrics("postgresql"); err != nil {
@@ -1040,7 +1040,7 @@ An optional list of instances (scrape targets) can be provided.
 		Short: "Remove ProxySQL instance from metrics monitoring.",
 		Long: `This command removes ProxySQL instance from metrics monitoring.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.RemoveMetrics("proxysql"); err != nil {
@@ -1121,8 +1121,8 @@ An optional list of instances (scrape targets) can be provided.
 
 	cmdInfo = &cobra.Command{
 		Use:   "info",
-		Short: "Display PMM Client information (works offline).",
-		Long:  "This command displays PMM client configuration details.",
+		Short: "Display SSM Client information (works offline).",
+		Long:  "This command displays SSM client configuration details.",
 		Run: func(cmd *cobra.Command, args []string) {
 			admin.PrintInfo()
 		},
@@ -1130,23 +1130,23 @@ An optional list of instances (scrape targets) can be provided.
 
 	cmdConfig = &cobra.Command{
 		Use:   "config",
-		Short: "Configure PMM Client.",
-		Long: `This command configures pmm-admin to communicate with PMM server.
+		Short: "Configure SSM Client.",
+		Long: `This command configures ssm-admin to communicate with SSM server.
 
 You can enable SSL (including self-signed certificates) and HTTP basic authentication with the server.
 If HTTP authentication is enabled with the server, the same credendials will be used for all metric services
 automatically to protect them.
 
 Note, resetting of server address clears up SSL and HTTP auth options if no corresponding flags are provided.`,
-		Example: `  pmm-admin config --server 192.168.56.100
-  pmm-admin config --server 192.168.56.100:8000
-  pmm-admin config --server 192.168.56.100 --server-password abc123`,
+		Example: `  ssm-admin config --server 192.168.56.100
+  ssm-admin config --server 192.168.56.100:8000
+  ssm-admin config --server 192.168.56.100 --server-password abc123`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.SetConfig(flagC, flagForce); err != nil {
 				fmt.Printf("%s\n", err)
 				os.Exit(1)
 			}
-			fmt.Print("OK, PMM server is alive.\n\n")
+			fmt.Print("OK, SSM server is alive.\n\n")
 			admin.ServerInfo()
 		},
 	}
@@ -1154,18 +1154,18 @@ Note, resetting of server address clears up SSL and HTTP auth options if no corr
 	cmdCheckNet = &cobra.Command{
 		Use:   "check-network",
 		Short: "Check network connectivity between client and server.",
-		Long: `This command runs the tests against PMM server to verify a bi-directional network connectivity.
+		Long: `This command runs the tests against SSM server to verify a bi-directional network connectivity.
 
 * Client --> Server
 Under this section you will find whether Consul, Query Analytics and Prometheus APIs are alive.
-Also there is a connection performance test results with PMM server displayed.
+Also there is a connection performance test results with SSM server displayed.
 
 * Client <-- Server
 Here you will see the status of individual Prometheus endpoints and whether it can scrape metrics from this system.
 Note, even this client can reach the server successfully it does not mean Prometheus is able to scrape from exporters.
 
-In case, some of the endpoints are in problem state, please check if the corresponding service is running ('pmm-admin list').
-If all endpoints are down here and 'pmm-admin list' shows all services are up,
+In case, some of the endpoints are in problem state, please check if the corresponding service is running ('ssm-admin list').
+If all endpoints are down here and 'ssm-admin list' shows all services are up,
 please check the firewall settings whether this system allows incoming connections by address:port in question.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.CheckNetwork(); err != nil {
@@ -1177,18 +1177,18 @@ please check the firewall settings whether this system allows incoming connectio
 
 	cmdPing = &cobra.Command{
 		Use:   "ping",
-		Short: "Check if PMM server is alive.",
-		Long:  "This command verifies the connectivity with PMM server.",
+		Short: "Check if SSM server is alive.",
+		Long:  "This command verifies the connectivity with SSM server.",
 		Run: func(cmd *cobra.Command, args []string) {
 			// It's all good if PersistentPreRun didn't fail.
-			fmt.Print("OK, PMM server is alive.\n\n")
+			fmt.Print("OK, SSM server is alive.\n\n")
 			admin.ServerInfo()
 		},
 	}
 
 	cmdShowPass = &cobra.Command{
 		Use:   "show-passwords",
-		Short: "Show PMM Client password information (works offline).",
+		Short: "Show SSM Client password information (works offline).",
 		Long:  "This command shows passwords stored in the config file.",
 		Run: func(cmd *cobra.Command, args []string) {
 			admin.ShowPasswords()
@@ -1200,11 +1200,11 @@ please check the firewall settings whether this system allows incoming connectio
 		Short: "Start monitoring service.",
 		Long: `This command starts the corresponding system service or all.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin start linux:metrics db01.vm
-  pmm-admin start mysql:queries db01.vm
-  pmm-admin start --all`,
+		Example: `  ssm-admin start linux:metrics db01.vm
+  ssm-admin start mysql:queries db01.vm
+  ssm-admin start --all`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if flagAll {
 				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("start")
@@ -1217,7 +1217,7 @@ please check the firewall settings whether this system allows incoming connectio
 					os.Exit(0)
 				}
 				if numOfAffected == 0 {
-					fmt.Println("OK, all services already started. Run 'pmm-admin list' to see monitoring services.")
+					fmt.Println("OK, all services already started. Run 'ssm-admin list' to see monitoring services.")
 				} else {
 					fmt.Printf("OK, started %d services.\n", numOfAffected)
 				}
@@ -1257,11 +1257,11 @@ please check the firewall settings whether this system allows incoming connectio
 		Short: "Stop monitoring service.",
 		Long: `This command stops the corresponding system service or all.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin stop linux:metrics db01.vm
-  pmm-admin stop mysql:queries db01.vm
-  pmm-admin stop --all`,
+		Example: `  ssm-admin stop linux:metrics db01.vm
+  ssm-admin stop mysql:queries db01.vm
+  ssm-admin stop --all`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if flagAll {
 				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("stop")
@@ -1274,7 +1274,7 @@ please check the firewall settings whether this system allows incoming connectio
 					os.Exit(0)
 				}
 				if numOfAffected == 0 {
-					fmt.Println("OK, all services already stopped. Run 'pmm-admin list' to see monitoring services.")
+					fmt.Println("OK, all services already stopped. Run 'ssm-admin list' to see monitoring services.")
 				} else {
 					fmt.Printf("OK, stopped %d services.\n", numOfAffected)
 				}
@@ -1310,11 +1310,11 @@ please check the firewall settings whether this system allows incoming connectio
 		Short: "Restart monitoring service.",
 		Long: `This command restarts the corresponding system service or all.
 
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin restart linux:metrics db01.vm
-  pmm-admin restart mysql:queries db01.vm
-  pmm-admin restart --all`,
+		Example: `  ssm-admin restart linux:metrics db01.vm
+  ssm-admin restart mysql:queries db01.vm
+  ssm-admin restart --all`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if flagAll {
 				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("restart")
@@ -1357,14 +1357,14 @@ please check the firewall settings whether this system allows incoming connectio
 
 	cmdPurge = &cobra.Command{
 		Use:   "purge TYPE [flags] [name]",
-		Short: "Purge metrics data on PMM server.",
-		Long: `This command purges metrics data associated with metrics service (type) on the PMM server.
+		Short: "Purge metrics data on SSM server.",
+		Long: `This command purges metrics data associated with metrics service (type) on the SSM server.
 
 It is not required that metric service or name exists.
-[name] is an optional argument, by default it is set to the client name of this PMM client.
+[name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
-		Example: `  pmm-admin purge linux:metrics
-  pmm-admin purge mysql:metrics db01.vm`,
+		Example: `  ssm-admin purge linux:metrics
+  ssm-admin purge mysql:metrics db01.vm`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Check args.
 			if len(args) == 0 {
@@ -1392,7 +1392,7 @@ It is not required that metric service or name exists.
 		Short: "Repair installation.",
 		Long: `This command removes orphaned system services.
 
-It removes local services disconnected from PMM server and remote services that are missing locally.
+It removes local services disconnected from SSM server and remote services that are missing locally.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.RepairInstallation(); err != nil {
@@ -1408,7 +1408,7 @@ It removes local services disconnected from PMM server and remote services that 
 		Long: `This command removes all monitoring services with the best effort.
 
 Usually, it runs automatically when pmm-client package is uninstalled to remove all local monitoring services
-despite PMM server is alive or not.
+despite SSM server is alive or not.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			count := admin.Uninstall()
@@ -1494,20 +1494,20 @@ func main() {
 	)
 
 	// Flags.
-	rootCmd.PersistentFlags().StringVarP(&pmm.ConfigFile, "config-file", "c", pmm.ConfigFile, "PMM config file")
+	rootCmd.PersistentFlags().StringVarP(&pmm.ConfigFile, "config-file", "c", pmm.ConfigFile, "SSM config file")
 	rootCmd.PersistentFlags().BoolVarP(&admin.Verbose, "verbose", "", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&admin.SkipAdmin, "skip-root", "", false, "skip UID check (experimental)")
 	rootCmd.Flags().BoolVarP(&flagVersion, "version", "v", false, "show version")
 	rootCmd.PersistentFlags().DurationVar(&flagTimeout, "timeout", 5*time.Second, "timeout")
 
-	cmdConfig.Flags().StringVar(&flagC.ServerAddress, "server", "", "PMM server address, optionally following with the :port (default port 80 or 443 if using SSL)")
+	cmdConfig.Flags().StringVar(&flagC.ServerAddress, "server", "", "SSM server address, optionally following with the :port (default port 80 or 443 if using SSL)")
 	cmdConfig.Flags().StringVar(&flagC.ClientAddress, "client-address", "", "client address, also remote/public address for this system (if omitted it will be automatically detected by asking server)")
 	cmdConfig.Flags().StringVar(&flagC.BindAddress, "bind-address", "", "bind address, also local/private address that is mapped from client address via NAT/port forwarding (defaults to the client address)")
 	cmdConfig.Flags().StringVar(&flagC.ClientName, "client-name", "", "client name (defaults to the system hostname)")
-	cmdConfig.Flags().StringVar(&flagC.ServerUser, "server-user", "pmm", "define HTTP user configured on PMM Server")
-	cmdConfig.Flags().StringVar(&flagC.ServerPassword, "server-password", "", "define HTTP password configured on PMM Server")
-	cmdConfig.Flags().BoolVar(&flagC.ServerSSL, "server-ssl", false, "enable SSL to communicate with PMM Server")
-	cmdConfig.Flags().BoolVar(&flagC.ServerInsecureSSL, "server-insecure-ssl", false, "enable insecure SSL (self-signed certificate) to communicate with PMM Server")
+	cmdConfig.Flags().StringVar(&flagC.ServerUser, "server-user", "pmm", "define HTTP user configured on SSM Server")
+	cmdConfig.Flags().StringVar(&flagC.ServerPassword, "server-password", "", "define HTTP password configured on SSM Server")
+	cmdConfig.Flags().BoolVar(&flagC.ServerSSL, "server-ssl", false, "enable SSL to communicate with SSM Server")
+	cmdConfig.Flags().BoolVar(&flagC.ServerInsecureSSL, "server-insecure-ssl", false, "enable insecure SSL (self-signed certificate) to communicate with SSM Server")
 	cmdConfig.Flags().BoolVar(&flagForce, "force", false, "force to set client name on initial setup after uninstall with unreachable server")
 
 	cmdAdd.PersistentFlags().IntVar(&flagServicePort, "service-port", 0, "service port")
@@ -1546,14 +1546,14 @@ func main() {
 		cmd.Flags().IntVar(&flagMySQLQueries.RetainSlowLogs, "retain-slow-logs", 1, "number of slow logs to retain after rotation")
 		cmd.Flags().StringVar(&flagMySQLQueries.QuerySource, "query-source", "auto", "source of SQL queries: auto, slowlog, perfschema")
 	}
-	// pmm-admin add mysql
+	// ssm-admin add mysql
 	addCommonMySQLFlags(cmdAddMySQL)
 	addCommonMySQLMetricsFlags(cmdAddMySQL)
 	addCommonMySQLQueriesFlags(cmdAddMySQL)
-	// pmm-admin add mysql:metrics
+	// ssm-admin add mysql:metrics
 	addCommonMySQLFlags(cmdAddMySQLMetrics)
 	addCommonMySQLMetricsFlags(cmdAddMySQLMetrics)
-	// pmm-admin add mysql:queries
+	// ssm-admin add mysql:queries
 	addCommonMySQLFlags(cmdAddMySQLQueries)
 	addCommonMySQLQueriesFlags(cmdAddMySQLQueries)
 
@@ -1569,9 +1569,9 @@ func main() {
 		cmd.Flags().BoolVar(&flagPostgreSQL.Force, "force", false, "force to create/update PostgreSQL user")
 		cmd.Flags().BoolVar(&flagDisableSSL, "disable-ssl", false, "disable ssl mode on exporter")
 	}
-	// pmm-admin add postgresql
+	// ssm-admin add postgresql
 	addCommonPostgreSQLFlags(cmdAddPostgreSQL)
-	// pmm-admin add postgresql:metrics
+	// ssm-admin add postgresql:metrics
 	addCommonPostgreSQLFlags(cmdAddPostgreSQLMetrics)
 
 	// Common MongoDB flags.
@@ -1587,14 +1587,14 @@ func main() {
 	addCommonMongoDBQueriesFlags := func(cmd *cobra.Command) {
 		cmd.Flags().BoolVar(&flagQueries.DisableQueryExamples, "disable-queryexamples", false, "disable collection of query examples")
 	}
-	// pmm-admin add mongodb
+	// ssm-admin add mongodb
 	addCommonMongoDBFlags(cmdAddMongoDB)
 	addCommonMongoDBMetricsFlags(cmdAddMongoDB)
 	addCommonMongoDBQueriesFlags(cmdAddMongoDB)
-	// pmm-admin add mongodb:metrics
+	// ssm-admin add mongodb:metrics
 	addCommonMongoDBFlags(cmdAddMongoDBMetrics)
 	addCommonMongoDBMetricsFlags(cmdAddMongoDBMetrics)
-	// pmm-admin add mongodb:queries
+	// ssm-admin add mongodb:queries
 	addCommonMongoDBFlags(cmdAddMongoDBQueries)
 	addCommonMongoDBQueriesFlags(cmdAddMongoDBQueries)
 

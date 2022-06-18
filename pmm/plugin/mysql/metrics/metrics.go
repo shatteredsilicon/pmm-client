@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin/mysql"
-	"github.com/shatteredsilicon/pmm-client/pmm/utils"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin/mysql"
+	"github.com/shatteredsilicon/ssm-client/pmm/utils"
 )
 
 var _ plugin.Metrics = (*Metrics)(nil)
@@ -93,7 +93,7 @@ func (m Metrics) Args() []string {
 		//"-collect.perf_schema.eventsstatements=true",
 	}
 
-	// disableArgs is a list of optional pmm-admin args to disable mysqld_exporter args.
+	// disableArgs is a list of optional ssm-admin args to disable mysqld_exporter args.
 	var disableArgs = map[string][]string{
 		"tablestats": {
 			"-collect.auto_increment.columns=",

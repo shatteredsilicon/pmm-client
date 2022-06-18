@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shatteredsilicon/pmm-client/pmm/managed"
-	"github.com/shatteredsilicon/pmm-client/tests/fakeapi"
+	"github.com/shatteredsilicon/ssm-client/pmm/managed"
+	"github.com/shatteredsilicon/ssm-client/tests/fakeapi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,7 +38,7 @@ func TestAdmin_AddAnnotation(t *testing.T) {
 	_, host, port := api.Start()
 	defer api.Close()
 
-	// create pmm-admin instance
+	// create ssm-admin instance
 	admin := &Admin{}
 	insecureFlag := true
 	timeout := 1 * time.Second
@@ -47,7 +47,7 @@ func TestAdmin_AddAnnotation(t *testing.T) {
 	hostPort := fmt.Sprintf("%s:%s", host, port)
 	admin.managedAPI = managed.NewClient(hostPort, "http", &url.Userinfo{}, false, true)
 
-	// point pmm-admin to fake http api
+	// point ssm-admin to fake http api
 	admin.serverURL = hostPort
 	scheme := "http"
 	authStr := ""

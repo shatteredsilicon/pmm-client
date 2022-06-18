@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shatteredsilicon/pmm-client/tests/fakeapi"
-	pc "github.com/percona/pmm/proto/config"
-	protocfg "github.com/percona/pmm/proto/config"
+	"github.com/shatteredsilicon/ssm-client/tests/fakeapi"
+	pc "github.com/shatteredsilicon/ssm/proto/config"
+	protocfg "github.com/shatteredsilicon/ssm/proto/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -87,14 +87,14 @@ func TestAdmin_StartStopQAN(t *testing.T) {
 		ExampleQueries: &exampleQueries,
 	}
 
-	// create pmm-admin instance
+	// create ssm-admin instance
 	admin := &Admin{}
 	insecureFlag := true
 	timeout := 1 * time.Second
 	debug := false
 	admin.qanAPI = NewAPI(insecureFlag, timeout, debug)
 
-	// point pmm-admin to fake http api
+	// point ssm-admin to fake http api
 	admin.serverURL = fmt.Sprintf("%s:%s", host, port)
 	scheme := "http"
 	authStr := ""

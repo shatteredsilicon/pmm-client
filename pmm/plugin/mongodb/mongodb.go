@@ -25,14 +25,14 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/shatteredsilicon/pmm-client/pmm/plugin"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
 	"gopkg.in/mgo.v2"
 )
 
 // Init verifies MongoDB connection.
 func Init(ctx context.Context, uri string, args []string, pmmBaseDir string) (*plugin.Info, error) {
 	path := fmt.Sprintf("%s/mongodb_exporter", pmmBaseDir)
-	// Add additional args passed to pmm-admin
+	// Add additional args passed to ssm-admin
 	args = append([]string{"--test"}, args...)
 	cmd := exec.CommandContext(
 		ctx,

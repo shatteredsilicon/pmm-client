@@ -57,7 +57,7 @@ func (a *Admin) CheckNetwork() error {
 		bindAddress = fmt.Sprintf("(%s)", a.Config.BindAddress)
 	}
 
-	fmt.Print("PMM Network Status\n\n")
+	fmt.Print("SSM Network Status\n\n")
 	fmt.Printf("%-14s | %s\n", "Server Address", a.Config.ServerAddress)
 	fmt.Printf("%-14s | %s %s\n\n", "Client Address", a.Config.ClientAddress, bindAddress)
 
@@ -102,20 +102,20 @@ func (a *Admin) CheckNetwork() error {
 
 		// Print times
 		fmt.Printf("%-35s | %s\n", fmt.Sprintf("NTP Server (%s)", ntpHost), ntpTimeText)
-		fmt.Printf("%-35s | %s\n", "PMM Server", serverTime.Format(timeFormat))
-		fmt.Printf("%-35s | %s\n", "PMM Client", clientTime.Format(timeFormat))
+		fmt.Printf("%-35s | %s\n", "SSM Server", serverTime.Format(timeFormat))
+		fmt.Printf("%-35s | %s\n", "SSM Client", clientTime.Format(timeFormat))
 
 		allowedDriftTime := float64(60) // seconds
 		if ntpTimeErr == nil {
-			// Calculate time drift between NTP Server and PMM Server
+			// Calculate time drift between NTP Server and SSM Server
 			drift := math.Abs(float64(serverTime.Unix()) - float64(ntpResponse.Time.Unix()))
-			fmt.Printf("%-35s | %s\n", "PMM Server Time Drift", colorStatus("OK", fmt.Sprintf("%.0fs", drift), drift <= allowedDriftTime))
+			fmt.Printf("%-35s | %s\n", "SSM Server Time Drift", colorStatus("OK", fmt.Sprintf("%.0fs", drift), drift <= allowedDriftTime))
 			if drift > allowedDriftTime {
 				fmt.Print("Time is out of sync. Please make sure the server time is correct to see the metrics.\n")
 			}
-			// Calculate time drift between NTP Server and PMM Client
+			// Calculate time drift between NTP Server and SSM Client
 			drift = math.Abs(float64(clientTime.Unix()) - float64(ntpResponse.Time.Unix()))
-			fmt.Printf("%-35s | %s\n", "PMM Client Time Drift", colorStatus("OK", fmt.Sprintf("%.0fs", drift), drift <= allowedDriftTime))
+			fmt.Printf("%-35s | %s\n", "SSM Client Time Drift", colorStatus("OK", fmt.Sprintf("%.0fs", drift), drift <= allowedDriftTime))
 			if drift > allowedDriftTime {
 				fmt.Print("Time is out of sync. Please make sure the client time is correct to see the metrics.\n")
 			}
@@ -123,7 +123,7 @@ func (a *Admin) CheckNetwork() error {
 
 		// Calculate time drift between server and client
 		drift := math.Abs(float64(serverTime.Unix()) - float64(clientTime.Unix()))
-		fmt.Printf("%-35s | %s\n", "PMM Client to PMM Server Time Drift", colorStatus("OK", fmt.Sprintf("%.0fs", drift), drift <= allowedDriftTime))
+		fmt.Printf("%-35s | %s\n", "SSM Client to SSM Server Time Drift", colorStatus("OK", fmt.Sprintf("%.0fs", drift), drift <= allowedDriftTime))
 		if drift > allowedDriftTime {
 			fmt.Print("Time is out of sync. Please make sure the server time is correct to see the metrics.\n")
 		}
@@ -149,7 +149,7 @@ func (a *Admin) CheckNetwork() error {
 	}
 
 	if !promStatus {
-		fmt.Print("Prometheus is down. Please check if PMM server container runs properly.\n\n")
+		fmt.Print("Prometheus is down. Please check if SSM server container runs properly.\n\n")
 		return nil
 	}
 
@@ -257,10 +257,10 @@ func (a *Admin) CheckNetwork() error {
 		}
 		url := fmt.Sprintf("%s://%s/prometheus/targets", scheme, a.Config.ServerAddress)
 		fmt.Printf(`
-When an endpoint is down it may indicate that the corresponding service is stopped (run 'pmm-admin list' to verify).
+When an endpoint is down it may indicate that the corresponding service is stopped (run 'ssm-admin list' to verify).
 If it's running, check out the logs /var/log/pmm-*.log
 
-When all endpoints are down but 'pmm-admin list' shows they are up and no errors in the logs,
+When all endpoints are down but 'ssm-admin list' shows they are up and no errors in the logs,
 check the firewall settings whether this system allows incoming connections from server to address:port in question.
 
 Also you can check the endpoint status by the URL: %s

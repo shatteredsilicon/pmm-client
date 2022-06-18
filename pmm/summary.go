@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/percona/kardianos-service"
+	service "github.com/percona/kardianos-service"
 )
 
 // Collector parameters and description.
@@ -68,9 +68,9 @@ func (c *Collector) CollectData() error {
 // CheckMonitoredDBServices finds out what DB instances are monitored.
 func CheckMonitoredDBServices() []string {
 	var monitoredDBServices []string
-	cmdPmmList, err := exec.Command("pmm-admin", "list").Output()
+	cmdPmmList, err := exec.Command("ssm-admin", "list").Output()
 	if err != nil {
-		fmt.Println("Error exec pmm-admin list", err)
+		fmt.Println("Error exec ssm-admin list", err)
 		return nil
 	}
 	if strings.Contains(string(cmdPmmList), "mysql:metrics") {
@@ -193,12 +193,12 @@ func (a *Admin) CollectSummary() error {
 	defer dstLogInfo.Close()
 	summaryLogger := log.New(dstLogInfo, "", log.LstdFlags)
 
-	var Collectors = []Collector{{"Collect pmm-admin check-network output",
-		[]string{"pmm-admin", "check-network"},
-		filepath.Join(dirname, strings.Join([]string{"pmm-admin_check-network_", cmdHostname, ".txt"}, ""))},
-		{"Collect pmm-admin list output",
-			[]string{"pmm-admin", "list"},
-			filepath.Join(dirname, strings.Join([]string{"pmm-admin_list_", cmdHostname, ".txt"}, ""))},
+	var Collectors = []Collector{{"Collect ssm-admin check-network output",
+		[]string{"ssm-admin", "check-network"},
+		filepath.Join(dirname, strings.Join([]string{"ssm-admin_check-network_", cmdHostname, ".txt"}, ""))},
+		{"Collect ssm-admin list output",
+			[]string{"ssm-admin", "list"},
+			filepath.Join(dirname, strings.Join([]string{"ssm-admin_list_", cmdHostname, ".txt"}, ""))},
 		{"Collect ps output",
 			[]string{"sh", "-c", "ps aux | grep exporter | grep -v grep"},
 			filepath.Join(dirname, strings.Join([]string{"ps_exporter_", cmdHostname, ".txt"}, ""))},

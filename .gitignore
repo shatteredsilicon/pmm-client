@@ -4,5 +4,5 @@
 .vscode/
 .idea/
 distro/
-pmm-admin
-pmm.yml
+ssm-admin
+ssm.yml

@@ -271,9 +271,9 @@
   revision = "fcf11a93afcf0897d2dca05688f4cf53b228c849"
 
 [[projects]]
-  branch = "master"
+  branch = "1.x"
   digest = "1:5670f66eb1bc3be7c0e4b8e1f6e3b13d2d29f099068f99d177047772990670ca"
-  name = "github.com/percona/pmm"
+  name = "github.com/shatteredsilicon/ssm"
   packages = [
     "proto",
     "proto/config",
@@ -445,9 +445,9 @@
     "github.com/lib/pq",
     "github.com/percona/go-mysql/dsn",
     "github.com/percona/kardianos-service",
-    "github.com/percona/pmm/proto",
-    "github.com/percona/pmm/proto/config",
-    "github.com/percona/pmm/version",
+    "github.com/shatteredsilicon/ssm/proto",
+    "github.com/shatteredsilicon/ssm/proto/config",
+    "github.com/shatteredsilicon/ssm/version",
     "github.com/prometheus/client_golang/api/prometheus",
     "github.com/prometheus/common/model",
     "github.com/spf13/cobra",

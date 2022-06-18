@@ -43,7 +43,7 @@ func TestHideCredentails(t *testing.T) {
 	}
 	err := admin.SetAPI()
 
-	expected := `Unable to connect to PMM server by address: 172.0.0.1:8080
+	expected := `Unable to connect to SSM server by address: 172.0.0.1:8080
 Get http://172.0.0.1:8080/qan-api/ping: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)
 
 * Check if the configured address is correct.

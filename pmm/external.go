@@ -24,7 +24,7 @@ import (
 
 	"github.com/prometheus/common/model"
 
-	"github.com/shatteredsilicon/pmm-client/pmm/managed"
+	"github.com/shatteredsilicon/ssm-client/pmm/managed"
 )
 
 type ExternalLabelPair struct {
@@ -56,7 +56,7 @@ func (a *Admin) ListExternalMetrics(ctx context.Context) ([]ExternalMetrics, err
 	if err != nil {
 		msg := fmt.Sprintf("Error getting a list of external metrics: %s.", err)
 		if _, ok := err.(*managed.Error); !ok {
-			msg += "\nPlease check versions of your PMM Server and PMM Client."
+			msg += "\nPlease check versions of your SSM Server and SSM Client."
 		}
 		return nil, fmt.Errorf("%s", msg)
 	}
