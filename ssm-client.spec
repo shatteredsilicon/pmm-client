@@ -50,7 +50,7 @@ cp -R %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/vendor %{_GOPATH}
 cd %{_GOPATH}/src/github.com/prometheus/promu/
     go install .
 
-ln -s %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter %{_GOPATH}/src/github.com/prometheus/node_exporter
+cp -R %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter %{_GOPATH}/src/github.com/prometheus/node_exporter
 cd %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter
 	%{__make} %{?_smp_mflags} build
 	%{__mv} node_exporter %{_GOPATH}/bin
