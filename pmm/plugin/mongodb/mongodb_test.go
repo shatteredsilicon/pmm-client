@@ -30,7 +30,7 @@ import (
 )
 
 func TestInit(t *testing.T) {
-	pmmBaseDir, err := ioutil.TempDir("/tmp", "pmm-client-test-rootdir-")
+	pmmBaseDir, err := ioutil.TempDir("/tmp", "ssm-client-test-rootdir-")
 	assert.NoError(t, err)
 	defer func() {
 		err := os.RemoveAll(pmmBaseDir)

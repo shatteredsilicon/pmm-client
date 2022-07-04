@@ -648,13 +648,13 @@ func testListNonEmpty(t *testing.T, data pmmAdminData) {
 	{
 		dir, extension := pmm.GetServiceDirAndExtension()
 		os.MkdirAll(data.rootDir+dir, 0777)
-		name := fmt.Sprintf("pmm-mysql-queries-0%s", extension)
+		name := fmt.Sprintf("ssm-mysql-queries-0%s", extension)
 		os.Create(data.rootDir + dir + "/" + name)
 	}
 	{
 		dir, extension := pmm.GetServiceDirAndExtension()
 		os.MkdirAll(data.rootDir+dir, 0777)
-		name := fmt.Sprintf("pmm-mongodb-queries-0%s", extension)
+		name := fmt.Sprintf("ssm-mongodb-queries-0%s", extension)
 		os.Create(data.rootDir + dir + "/" + name)
 	}
 
@@ -848,7 +848,7 @@ func testStartStopRestart(t *testing.T, data pmmAdminData) {
 	{
 		dir, extension := pmm.GetServiceDirAndExtension()
 		os.MkdirAll(data.rootDir+dir, 0777)
-		name := fmt.Sprintf("pmm-mysql-queries-0%s", extension)
+		name := fmt.Sprintf("ssm-mysql-queries-0%s", extension)
 		os.Create(data.rootDir + dir + "/" + name)
 	}
 
@@ -914,7 +914,7 @@ func testStartStopRestartAllWithServices(t *testing.T, data pmmAdminData) {
 		dir, extension := pmm.GetServiceDirAndExtension()
 		os.MkdirAll(data.rootDir+dir, 0777)
 		for i := 0; i < numOfServices; i++ {
-			name := fmt.Sprintf("pmm-service-%d%s", i, extension)
+			name := fmt.Sprintf("ssm-service-%d%s", i, extension)
 			os.Create(data.rootDir + dir + "/" + name)
 		}
 	}

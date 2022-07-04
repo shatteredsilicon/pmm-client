@@ -279,7 +279,7 @@ func (a *Admin) StartStopMonitoring(action, svcType string) (affected bool, err 
 		return false, ErrNoService
 	}
 
-	svcName := fmt.Sprintf("pmm-%s-%d", strings.Replace(svcType, ":", "-", 1), consulSvc.Port)
+	svcName := fmt.Sprintf("ssm-%s-%d", strings.Replace(svcType, ":", "-", 1), consulSvc.Port)
 	switch action {
 	case "start":
 		if getServiceStatus(svcName) {
@@ -620,7 +620,7 @@ func (a *Admin) CheckInstallation() (orphanedServices, missingServices []string)
 ForLoop1:
 	for _, s := range localServices {
 		for _, svc := range node.Services {
-			svcName := fmt.Sprintf("pmm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port)
+			svcName := fmt.Sprintf("ssm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port)
 			if s == svcName {
 				continue ForLoop1
 			}
@@ -631,7 +631,7 @@ ForLoop1:
 	// Find missing services: Consul services that are missing locally.
 ForLoop2:
 	for _, svc := range node.Services {
-		svcName := fmt.Sprintf("pmm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port)
+		svcName := fmt.Sprintf("ssm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port)
 		for _, s := range localServices {
 			if s == svcName {
 				continue ForLoop2
@@ -722,8 +722,8 @@ func (a *Admin) Uninstall() uint16 {
 func GetLocalServices() (services []string) {
 	dir, extension := GetServiceDirAndExtension()
 
-	filesFound, _ := filepath.Glob(fmt.Sprintf("%s/pmm-*%s", dir, extension))
-	rService, _ := regexp.Compile(fmt.Sprintf("%s/(pmm-.+)%s", dir, extension))
+	filesFound, _ := filepath.Glob(fmt.Sprintf("%s/ssm-*%s", dir, extension))
+	rService, _ := regexp.Compile(fmt.Sprintf("%s/(ssm-.+)%s", dir, extension))
 	for _, f := range filesFound {
 		if data := rService.FindStringSubmatch(f); data != nil {
 			services = append(services, data[1])

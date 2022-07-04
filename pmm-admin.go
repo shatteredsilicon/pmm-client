@@ -196,7 +196,7 @@ run 'ssm-admin repair' to remove orphaned services. Otherwise, please reinstall 
 	cmdSummary = &cobra.Command{
 		Use:     "summary",
 		Short:   "Fetch system data for diagnostics.",
-		Long:    "Collect data for Support Engineers to review when troubleshooting pmm-client cases",
+		Long:    "Collect data for Support Engineers to review when troubleshooting ssm-client cases",
 		Example: `  ssm-admin summary `,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := admin.CollectSummary(); err != nil {
@@ -1407,7 +1407,7 @@ It removes local services disconnected from SSM server and remote services that 
 		Short: "Removes all monitoring services with the best effort.",
 		Long: `This command removes all monitoring services with the best effort.
 
-Usually, it runs automatically when pmm-client package is uninstalled to remove all local monitoring services
+Usually, it runs automatically when ssm-client package is uninstalled to remove all local monitoring services
 despite SSM server is alive or not.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {

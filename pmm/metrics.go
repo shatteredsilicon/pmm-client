@@ -181,7 +181,7 @@ func (a *Admin) RemoveMetrics(name string) error {
 	}
 
 	// Stop and uninstall service.
-	serviceName := fmt.Sprintf("pmm-%s-metrics-%d", name, consulSvc.Port)
+	serviceName := fmt.Sprintf("ssm-%s-metrics-%d", name, consulSvc.Port)
 	if err := uninstallService(serviceName); err != nil {
 		return err
 	}

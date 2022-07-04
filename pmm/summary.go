@@ -178,16 +178,16 @@ func (a *Admin) CollectSummary() error {
 		cmdHostname = "unknown"
 	}
 
-	dirname := filepath.Join("/tmp", strings.Join([]string{"pmm", cmdHostname, currentTime.Format("2006-01-02T15_04_05")}, "-"))
+	dirname := filepath.Join("/tmp", strings.Join([]string{"ssm", cmdHostname, currentTime.Format("2006-01-02T15_04_05")}, "-"))
 	err = os.MkdirAll(dirname, 0755)
 	if err != nil {
 		fmt.Printf("Error creating a temporary directory %s: %v\n", dirname, err)
 		os.Exit(1)
 	}
 
-	dstLogInfo, err := os.Create(filepath.Join(dirname, "pmm-summary.err"))
+	dstLogInfo, err := os.Create(filepath.Join(dirname, "ssm-summary.err"))
 	if err != nil {
-		fmt.Printf("Error create pmm-summary.err file: %v\n", err)
+		fmt.Printf("Error create ssm-summary.err file: %v\n", err)
 		os.Exit(1)
 	}
 	defer dstLogInfo.Close()
@@ -254,7 +254,7 @@ func (a *Admin) CollectSummary() error {
 		summaryLogger.Println(err)
 	} else {
 		defer srcf.Close()
-		names, err := filepath.Glob(filepath.Join(logsDir, "pmm-*"))
+		names, err := filepath.Glob(filepath.Join(logsDir, "ssm-*"))
 		if err != nil {
 			fmt.Printf("Getting list of  PMM logs in %s failed/n", logsDir)
 			summaryLogger.Println("No PMM logs were detected in", logsDir)
