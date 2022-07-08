@@ -235,7 +235,7 @@ func (a *Admin) getSVCTable(node *consul.CatalogNode) []ServiceStatus {
 			continue
 		}
 
-		status := getServiceStatus(fmt.Sprintf("pmm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port))
+		status := getServiceStatus(fmt.Sprintf("ssm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port))
 
 		opts := []string{}
 		name := "-"
@@ -279,7 +279,7 @@ func (a *Admin) getSVCTable(node *consul.CatalogNode) []ServiceStatus {
 
 	// Parse queries service.
 	for _, queryService := range queryServices {
-		status := getServiceStatus(fmt.Sprintf("pmm-%s-%d", strings.Replace(queryService.Service, ":", "-", 1), queryService.Port))
+		status := getServiceStatus(fmt.Sprintf("ssm-%s-%d", strings.Replace(queryService.Service, ":", "-", 1), queryService.Port))
 
 		// Get names from Consul tags.
 		names := []string{}

@@ -133,7 +133,7 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 		// Install and start service via platform service manager.
 		// We have to run agent before adding it to QAN.
 		svcConfig := &service.Config{
-			Name:        fmt.Sprintf("pmm-%s-queries-%d", q.Name(), port),
+			Name:        fmt.Sprintf("ssm-%s-queries-%d", q.Name(), port),
 			DisplayName: "SSM Query Analytics agent",
 			Description: "SSM Query Analytics agent",
 			Executable:  fmt.Sprintf("%s/bin/ssm-qan-agent", AgentBaseDir),
@@ -145,7 +145,7 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 	} else {
 		port = consulSvc.Port
 		// Ensure qan-agent is started if service exists, otherwise it won't be enabled for QAN.
-		if err := startService(fmt.Sprintf("pmm-%s-queries-%d", q.Name(), port)); err != nil {
+		if err := startService(fmt.Sprintf("ssm-%s-queries-%d", q.Name(), port)); err != nil {
 			return nil, err
 		}
 	}
@@ -218,7 +218,7 @@ func (a *Admin) RemoveQueries(name string) error {
 	}
 
 	// Ensure qan-agent is started, otherwise it will be an error to stop QAN.
-	if err := startService(fmt.Sprintf("pmm-%s-queries-%d", name, consulSvc.Port)); err != nil {
+	if err := startService(fmt.Sprintf("ssm-%s-queries-%d", name, consulSvc.Port)); err != nil {
 		return err
 	}
 
@@ -274,7 +274,7 @@ func (a *Admin) RemoveQueries(name string) error {
 		}
 
 		// Stop and uninstall service.
-		if err := uninstallService(fmt.Sprintf("pmm-%s-queries-%d", name, consulSvc.Port)); err != nil {
+		if err := uninstallService(fmt.Sprintf("ssm-%s-queries-%d", name, consulSvc.Port)); err != nil {
 			return err
 		}
 	} else {
