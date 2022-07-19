@@ -25,6 +25,7 @@ import (
 
 const (
 	qanAPIBasePath = "qan-api"
+	managedAPIPath = "managed"
 	noMonitoring   = "No monitoring registered for this node identified as"
 	apiTimeout     = 10 * time.Second
 	NameRegex      = `^[-\w:\.]{2,60}$`
