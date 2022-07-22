@@ -33,49 +33,52 @@ type Queries struct {
 	queriesFlags plugin.QueriesFlags
 	flags        Flags
 	mysqlFlags   mysql.Flags
+
+	dsn string
 }
 
 // Init initializes plugin.
-func (m *Queries) Init(ctx context.Context, pmmUserPassword string) (*plugin.Info, error) {
-	info, err := mysql.Init(ctx, m.mysqlFlags, pmmUserPassword)
+func (q *Queries) Init(ctx context.Context, pmmUserPassword string) (*plugin.Info, error) {
+	info, err := mysql.Init(ctx, q.mysqlFlags, pmmUserPassword)
 	if err != nil {
 		return nil, err
 	}
 
-	if m.flags.QuerySource == "auto" {
+	if q.flags.QuerySource == "auto" {
 		// MySQL is local if the server hostname == MySQL hostname.
 		osHostname, _ := os.Hostname()
 		if osHostname == info.Hostname {
-			m.flags.QuerySource = "slowlog"
+			q.flags.QuerySource = "slowlog"
 		} else {
-			m.flags.QuerySource = "perfschema"
+			q.flags.QuerySource = "perfschema"
 		}
 	}
 
-	info.QuerySource = m.flags.QuerySource
+	info.QuerySource = q.flags.QuerySource
+	q.dsn = info.DSN
 	return info, nil
 }
 
 // Name of the service.
-func (m Queries) Name() string {
-	return "mysql"
+func (q Queries) Name() string {
+	return plugin.NameMySQL
 }
 
 // InstanceTypeName of the service.
 // Deprecated: QAN API should use the same value as Name().
-func (m Queries) InstanceTypeName() string {
-	return m.Name()
+func (q Queries) InstanceTypeName() string {
+	return q.Name()
 }
 
 // Config returns pc.QAN.
-func (m Queries) Config() pc.QAN {
-	exampleQueries := !m.queriesFlags.DisableQueryExamples
+func (q Queries) Config() pc.QAN {
+	exampleQueries := !q.queriesFlags.DisableQueryExamples
 	return pc.QAN{
-		CollectFrom:    m.flags.QuerySource,
+		CollectFrom:    q.flags.QuerySource,
 		Interval:       60,
 		ExampleQueries: &exampleQueries,
 		// "slowlog" specific options.
-		SlowLogRotation: &m.flags.SlowLogRotation,
-		RetainSlowLogs:  &m.flags.RetainSlowLogs,
+		SlowLogRotation: &q.flags.SlowLogRotation,
+		RetainSlowLogs:  &q.flags.RetainSlowLogs,
 	}
 }

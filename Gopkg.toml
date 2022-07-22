@@ -27,3 +27,7 @@
 [[constraint]]
   name = "github.com/go-sql-driver/mysql"
   version = "^1.4.0"
+
+[[override]]
+  name = "golang.org/x/net"
+  revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"

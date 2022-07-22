@@ -259,6 +259,14 @@
   version = "v1.0.3"
 
 [[projects]]
+  digest = "1:340a69d46b54269517a4c313bf80500383919c0023e6c337b0870e4bf3efe147"
+  name = "github.com/hashicorp/go-version"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "78d058c5618891f74d604bd15356fca690b64d8a"
+  version = "v1.6.0"
+
+[[projects]]
   digest = "1:9676627451831e0d8e347007d871eac494ce51d55b95a3fe1fac30ad8d717ab9"
   name = "github.com/hashicorp/golang-lru"
   packages = [
@@ -540,6 +548,17 @@
   revision = "e2103e2c35297fb7e17febb81e49b312087a2372"
 
 [[projects]]
+  digest = "1:f413f60a70c5da5d0c7c912bc9b723ea29fa9d62b882f3d06b22bfec5bd96c20"
+  name = "github.com/shatteredsilicon/qan-agent"
+  packages = [
+    "agent/release",
+    "pct",
+  ]
+  pruneopts = "NUT"
+  revision = "8da621122302bb04fae0e02df1ddf97fcf3355d7"
+  version = "v1.18.0"
+
+[[projects]]
   branch = "1.x"
   digest = "1:5670f66eb1bc3be7c0e4b8e1f6e3b13d2d29f099068f99d177047772990670ca"
   name = "github.com/shatteredsilicon/ssm"
@@ -650,8 +669,7 @@
   version = "v0.5.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:34ae556f8a8858ab533aad64adfe44cc82793d2ac2b4f6d521962c6f1e8465f0"
+  digest = "1:6a79c49c41e98a58816bcea4d4bdb5c827dd94a3fbd72c4c249b42fd7ca2c358"
   name = "golang.org/x/net"
   packages = [
     "bpf",
@@ -661,9 +679,10 @@
     "internal/socket",
     "ipv4",
     "ipv6",
+    "websocket",
   ]
   pruneopts = "NUT"
-  revision = "1bab6f366d9ec8c152f8735b2e359822ef75e3bd"
+  revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
 
 [[projects]]
   branch = "master"
@@ -813,6 +832,7 @@
     "github.com/percona/kardianos-service",
     "github.com/prometheus/client_golang/api/prometheus",
     "github.com/prometheus/common/model",
+    "github.com/shatteredsilicon/qan-agent/pct",
     "github.com/shatteredsilicon/ssm/proto",
     "github.com/shatteredsilicon/ssm/proto/config",
     "github.com/shatteredsilicon/ssm/version",

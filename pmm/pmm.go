@@ -46,6 +46,7 @@ import (
 	"github.com/shatteredsilicon/ssm/version"
 
 	"github.com/shatteredsilicon/ssm-client/pmm/managed"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
 )
 
 // Admin main class.
@@ -183,7 +184,7 @@ ssm-admin config --server %s %s`, a.Config.ServerAddress, helpText)
 	if a.Config.ServerUser != "" {
 		user = url.UserPassword(a.Config.ServerUser, a.Config.ServerPassword)
 	}
-	a.managedAPI = managed.NewClient(a.Config.ServerAddress, scheme, user, a.Config.ServerInsecureSSL, a.Verbose)
+	a.managedAPI = managed.NewClient(a.Config.ServerAddress, a.Config.ManagedAPIPath, scheme, user, a.Config.ServerInsecureSSL, a.Verbose)
 
 	return nil
 }
@@ -372,31 +373,31 @@ func (a *Admin) RemoveAllMonitoring(ignoreErrors bool) (uint16, error) {
 			a.ServiceName = tag[6:]
 			switch svc.Service {
 			case "linux:metrics":
-				if err := a.RemoveMetrics("linux"); err != nil && !ignoreErrors {
+				if err := a.RemoveMetrics(plugin.NameLinux); err != nil && !ignoreErrors {
 					return count, err
 				}
 			case "mysql:metrics":
-				if err := a.RemoveMetrics("mysql"); err != nil && !ignoreErrors {
+				if err := a.RemoveMetrics(plugin.NameMySQL); err != nil && !ignoreErrors {
 					return count, err
 				}
 			case "mysql:queries":
-				if err := a.RemoveQueries("mysql"); err != nil && !ignoreErrors {
+				if err := a.RemoveQueries(plugin.NameMySQL); err != nil && !ignoreErrors {
 					return count, err
 				}
 			case "mongodb:metrics":
-				if err := a.RemoveMetrics("mongodb"); err != nil && !ignoreErrors {
+				if err := a.RemoveMetrics(plugin.NameMongoDB); err != nil && !ignoreErrors {
 					return count, err
 				}
 			case "mongodb:queries":
-				if err := a.RemoveQueries("mongodb"); err != nil && !ignoreErrors {
+				if err := a.RemoveQueries(plugin.NameMongoDB); err != nil && !ignoreErrors {
 					return count, err
 				}
 			case "postgresql:metrics":
-				if err := a.RemoveMetrics("postgresql"); err != nil && !ignoreErrors {
+				if err := a.RemoveMetrics(plugin.NamePostgreSQL); err != nil && !ignoreErrors {
 					return count, err
 				}
 			case "proxysql:metrics":
-				if err := a.RemoveMetrics("proxysql"); err != nil && !ignoreErrors {
+				if err := a.RemoveMetrics(plugin.NameProxySQL); err != nil && !ignoreErrors {
 					return count, err
 				}
 			}

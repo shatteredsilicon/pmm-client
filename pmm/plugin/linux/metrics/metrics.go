@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
+	"github.com/shatteredsilicon/ssm-client/pmm/plugin/linux"
 )
 
 var _ plugin.Metrics = (*Metrics)(nil)
@@ -18,12 +19,12 @@ type Metrics struct{}
 
 // Init initializes plugin.
 func (Metrics) Init(ctx context.Context, pmmUserPassword string) (*plugin.Info, error) {
-	return &plugin.Info{}, nil
+	return linux.GetInfo()
 }
 
 // Name of the exporter.
 func (Metrics) Name() string {
-	return "linux"
+	return plugin.NameLinux
 }
 
 // DefaultPort returns default port.
@@ -45,7 +46,7 @@ func (Metrics) Environment() []string {
 
 // Executable is a name of exporter executable under PMMBaseDir.
 func (Metrics) Executable() string {
-	return "node_exporter"
+	return plugin.NodeExporter
 }
 
 // KV is a list of additional Key-Value data stored in consul.

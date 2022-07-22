@@ -160,6 +160,8 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 
 	tags := []string{
 		fmt.Sprintf("alias_%s", a.ServiceName),
+		fmt.Sprintf("distro_%s", info.Distro),
+		fmt.Sprintf("version_%s", info.Version),
 	}
 	// For existing service, we append a new alias_ tag.
 	if consulSvc != nil {
@@ -509,7 +511,7 @@ func (a *Admin) registerAgent() error {
 	os.RemoveAll(fmt.Sprintf("%s/%s", AgentBaseDir, "instance"))
 
 	path := fmt.Sprintf("%s/bin/ssm-qan-agent-installer", AgentBaseDir)
-	args := []string{"-basedir", AgentBaseDir, "-managed-api-path", managedAPIPath}
+	args := []string{"-basedir", AgentBaseDir}
 	if a.Config.ServerSSL {
 		args = append(args, "-use-ssl")
 	}

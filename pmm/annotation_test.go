@@ -45,7 +45,7 @@ func TestAdmin_AddAnnotation(t *testing.T) {
 	debug := false
 	admin.qanAPI = NewAPI(insecureFlag, timeout, debug)
 	hostPort := fmt.Sprintf("%s:%s", host, port)
-	admin.managedAPI = managed.NewClient(hostPort, "http", &url.Userinfo{}, false, true)
+	admin.managedAPI = managed.NewClient(hostPort, "managed", "http", &url.Userinfo{}, false, true)
 
 	// point ssm-admin to fake http api
 	admin.serverURL = hostPort

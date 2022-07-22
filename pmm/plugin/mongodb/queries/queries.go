@@ -40,7 +40,7 @@ func (m *Queries) Init(ctx context.Context, pmmUserPassword string) (*plugin.Inf
 
 // Name of the service.
 func (m Queries) Name() string {
-	return "mongodb"
+	return plugin.NameMongoDB
 }
 
 // InstanceTypeName of the service.

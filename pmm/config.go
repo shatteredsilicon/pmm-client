@@ -46,6 +46,7 @@ type Config struct {
 	ServerPassword    string `yaml:"server_password,omitempty"`
 	ServerSSL         bool   `yaml:"server_ssl,omitempty"`
 	ServerInsecureSSL bool   `yaml:"server_insecure_ssl,omitempty"`
+	ManagedAPIPath    string `yaml:"managed_api_path"`
 }
 
 // LoadConfig read SSM client config file.
@@ -66,6 +67,11 @@ func (a *Admin) LoadConfig() error {
 	if a.Config.BindAddress == "" {
 		a.Config.BindAddress = a.Config.ClientAddress
 	}
+
+	if a.Config.ManagedAPIPath == "" {
+		a.Config.ManagedAPIPath = managedAPIBasePath
+	}
+
 	return nil
 }
 

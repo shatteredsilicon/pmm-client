@@ -68,7 +68,7 @@ type Client struct {
 	basePath string
 }
 
-func NewClient(host string, scheme string, user *url.Userinfo, insecureSSL bool, verbose bool) *Client {
+func NewClient(host, basePath, scheme string, user *url.Userinfo, insecureSSL bool, verbose bool) *Client {
 	transport := &http.Transport{}
 	if insecureSSL {
 		transport.TLSClientConfig = &tls.Config{
@@ -87,7 +87,7 @@ func NewClient(host string, scheme string, user *url.Userinfo, insecureSSL bool,
 		host:     host,
 		scheme:   scheme,
 		user:     user,
-		basePath: "/managed",
+		basePath: basePath,
 	}
 }
 
