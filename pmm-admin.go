@@ -1411,11 +1411,25 @@ Usually, it runs automatically when ssm-client package is uninstalled to remove 
 despite SSM server is alive or not.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			count := admin.Uninstall()
-			if count == 0 {
-				fmt.Println("OK, no services found.")
+			fileExists := pmm.FileExists(pmm.ConfigFile)
+			count, clientErr, serverErr := admin.Uninstall()
+
+			if clientErr != nil {
+				fmt.Printf("client: FAIL, %+v.\n", clientErr)
 			} else {
-				fmt.Printf("OK, %d services were removed.\n", count)
+				if count == 0 {
+					fmt.Println("client: OK, no services found.")
+				} else {
+					fmt.Printf("client: OK, %d services were removed.\n", count)
+				}
+			}
+
+			if fileExists {
+				if serverErr == nil {
+					fmt.Println("server: OK, data will be removed.")
+				} else {
+					fmt.Printf("server: FAIL, %+v\n", serverErr)
+				}
 			}
 			os.Exit(0)
 		},

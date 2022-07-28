@@ -422,17 +422,10 @@ Service type takes the following values: linux:metrics, mysql:metrics, mongodb:m
 
 	var promError error
 
-	// Delete series in Prometheus v1.
-	match := fmt.Sprintf(`{job="%s",instance="%s"}`, strings.Split(svcType, ":")[0], a.ServiceName)
-	url := a.qanAPI.URL(a.serverURL, fmt.Sprintf("prometheus1/api/v1/series?match[]=%s", match))
-	resp, _, err := a.qanAPI.Delete(url)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		promError = fmt.Errorf("%v:%v resp: %v", promError, err, resp)
-	}
-
 	// Delete series in Prometheus v2.
-	url = a.qanAPI.URL(a.serverURL, fmt.Sprintf("prometheus/api/v1/admin/tsdb/delete_series?match[]=%s", match))
-	resp, _, err = a.qanAPI.Post(url, []byte{})
+	match := fmt.Sprintf(`{job="%s",instance="%s"}`, strings.Split(svcType, ":")[0], a.ServiceName)
+	url := a.qanAPI.URL(a.serverURL, fmt.Sprintf("prometheus/api/v1/admin/tsdb/delete_series?match[]=%s", match))
+	resp, _, err := a.qanAPI.Post(url, []byte{})
 	if err != nil || resp.StatusCode != http.StatusNoContent {
 		promError = fmt.Errorf("%v:%v resp: %v", promError, err, resp)
 	}
@@ -694,9 +687,9 @@ func (a *Admin) RepairInstallation() error {
 }
 
 // Uninstall remove all monitoring services with the best effort.
-func (a *Admin) Uninstall() uint16 {
-	var count uint16
-	if FileExists(ConfigFile) {
+func (a *Admin) Uninstall() (count uint16, clientErr, serverErr error) {
+	fileExists := FileExists(ConfigFile)
+	if fileExists {
 		err := a.LoadConfig()
 		if err == nil {
 			a.apiTimeout = 5 * time.Second
@@ -716,7 +709,40 @@ func (a *Admin) Uninstall() uint16 {
 		}
 	}
 
-	return count
+	if !fileExists {
+		return
+	}
+
+	var user *url.Userinfo
+	if a.Config.ServerUser != "" {
+		user = url.UserPassword(a.Config.ServerUser, a.Config.ServerPassword)
+	}
+	schema := "http"
+	if a.Config.ServerInsecureSSL || a.Config.ServerSSL {
+		schema = "https"
+	}
+	a.managedAPI = managed.NewClient(
+		a.Config.ServerAddress, a.Config.ManagedAPIPath,
+		schema, user, a.Config.ServerInsecureSSL, false,
+	)
+	serverErr = a.managedAPI.DeleteNode(context.Background(), a.Config.ClientName)
+	if serverErr != nil {
+		return
+	}
+
+	// Remove agent dirs to ensure feature clean installation. Using full paths to avoid unexpected removals.
+	os.RemoveAll(fmt.Sprintf("%s/%s", AgentBaseDir, "config"))
+	os.RemoveAll(fmt.Sprintf("%s/%s", AgentBaseDir, "data"))
+	os.RemoveAll(fmt.Sprintf("%s/%s", AgentBaseDir, "instance"))
+	os.RemoveAll(fmt.Sprintf("%s/%s", AgentBaseDir, "trash"))
+
+	err := a.removeConfig()
+	if err != nil {
+		clientErr = fmt.Errorf("remove config file %s failed: %+v", ConfigFile, err)
+		return
+	}
+
+	return
 }
 
 // GetLocalServices finds any local SSM services

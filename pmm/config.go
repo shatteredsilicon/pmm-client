@@ -280,6 +280,7 @@ What ports to map you can find from "ssm-admin check-network" output once you ad
 	}
 
 	// Write the config.
+	a.Config.ManagedAPIPath = managedAPIBasePath
 	if err := a.writeConfig(); err != nil {
 		return fmt.Errorf("Unable to write config file %s: %s", ConfigFile, err)
 	}
@@ -299,6 +300,11 @@ What ports to map you can find from "ssm-admin check-network" output once you ad
 func (a *Admin) writeConfig() error {
 	bytes, _ := yaml.Marshal(a.Config)
 	return ioutil.WriteFile(ConfigFile, bytes, 0600)
+}
+
+// removeConfig remove config file
+func (a *Admin) removeConfig() error {
+	return os.Remove(ConfigFile)
 }
 
 // syncAgentConfig sync agent config.
