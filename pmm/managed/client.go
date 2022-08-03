@@ -68,7 +68,7 @@ type Client struct {
 	basePath string
 }
 
-func NewClient(host string, scheme string, user *url.Userinfo, insecureSSL bool, verbose bool) *Client {
+func NewClient(host, basePath, scheme string, user *url.Userinfo, insecureSSL bool, verbose bool) *Client {
 	transport := &http.Transport{}
 	if insecureSSL {
 		transport.TLSClientConfig = &tls.Config{
@@ -87,7 +87,7 @@ func NewClient(host string, scheme string, user *url.Userinfo, insecureSSL bool,
 		host:     host,
 		scheme:   scheme,
 		user:     user,
-		basePath: "/managed",
+		basePath: basePath,
 	}
 }
 
@@ -180,4 +180,9 @@ func (c *Client) VersionGet(ctx context.Context) (*VersionResponse, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+// DeleteNode sends a DELETE node request to server
+func (c *Client) DeleteNode(ctx context.Context, nodeName string) error {
+	return c.do(ctx, "DELETE", "/v0/nodes/"+nodeName, nil, nil)
 }

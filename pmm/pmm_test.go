@@ -39,6 +39,7 @@ func TestHideCredentails(t *testing.T) {
 			ServerAddress:  "172.0.0.1:8080",
 			ServerUser:     "test",
 			ServerPassword: "123",
+			ManagedAPIPath: "/managed",
 		},
 	}
 	err := admin.SetAPI()

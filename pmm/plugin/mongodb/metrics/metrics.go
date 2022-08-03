@@ -41,7 +41,7 @@ func (m *Metrics) Init(ctx context.Context, pmmUserPassword string) (*plugin.Inf
 
 // Name of the exporter.
 func (Metrics) Name() string {
-	return "mongodb"
+	return plugin.NameMongoDB
 }
 
 // DefaultPort returns default port.
@@ -61,7 +61,7 @@ func (m Metrics) Environment() []string {
 
 // Executable is a name of exporter executable under PMMBaseDir.
 func (Metrics) Executable() string {
-	return "mongodb_exporter"
+	return plugin.MongoDBExporter
 }
 
 // KV is a list of additional Key-Value data stored in consul.

@@ -57,7 +57,7 @@ func (m *Metrics) Init(ctx context.Context, pmmUserPassword string) (*plugin.Inf
 
 // Name of the exporter.
 func (m Metrics) Name() string {
-	return "mysql"
+	return plugin.NameMySQL
 }
 
 // DefaultPort returns default port.
@@ -132,7 +132,7 @@ func (m Metrics) Environment() []string {
 
 // Executable is a name of exporter executable under PMMBaseDir.
 func (m Metrics) Executable() string {
-	return "mysqld_exporter"
+	return plugin.MySQLExporter
 }
 
 // KV is a list of additional Key-Value data stored in consul.

@@ -854,7 +854,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := admin.RemoveMetrics("linux")
+			err := admin.RemoveMetrics(plugin.NameLinux)
 			if err == pmm.ErrNoService {
 				fmt.Printf("[linux:metrics] OK, no system %s under monitoring.\n", admin.ServiceName)
 			} else if err != nil {
@@ -863,7 +863,7 @@ An optional list of instances (scrape targets) can be provided.
 				fmt.Printf("[linux:metrics] OK, removed system %s from monitoring.\n", admin.ServiceName)
 			}
 
-			err = admin.RemoveMetrics("mysql")
+			err = admin.RemoveMetrics(plugin.NameMySQL)
 			if err == pmm.ErrNoService {
 				fmt.Printf("[mysql:metrics] OK, no MySQL metrics %s under monitoring.\n", admin.ServiceName)
 			} else if err != nil {
@@ -872,7 +872,7 @@ An optional list of instances (scrape targets) can be provided.
 				fmt.Printf("[mysql:metrics] OK, removed MySQL metrics %s from monitoring.\n", admin.ServiceName)
 			}
 
-			err = admin.RemoveQueries("mysql")
+			err = admin.RemoveQueries(plugin.NameMySQL)
 			if err == pmm.ErrNoService {
 				fmt.Printf("[mysql:queries] OK, no MySQL queries %s under monitoring.\n", admin.ServiceName)
 			} else if err != nil {
@@ -890,7 +890,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := admin.RemoveMetrics("linux"); err != nil {
+			if err := admin.RemoveMetrics(plugin.NameLinux); err != nil {
 				fmt.Printf("Error removing linux metrics %s: %s\n", admin.ServiceName, err)
 				os.Exit(1)
 			}
@@ -905,7 +905,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := admin.RemoveMetrics("mysql"); err != nil {
+			if err := admin.RemoveMetrics(plugin.NameMySQL); err != nil {
 				fmt.Printf("Error removing MySQL metrics %s: %s\n", admin.ServiceName, err)
 				os.Exit(1)
 			}
@@ -920,7 +920,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := admin.RemoveQueries("mysql"); err != nil {
+			if err := admin.RemoveQueries(plugin.NameMySQL); err != nil {
 				fmt.Printf("Error removing MySQL queries %s: %s\n", admin.ServiceName, err)
 				os.Exit(1)
 			}
@@ -935,7 +935,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := admin.RemoveMetrics("linux")
+			err := admin.RemoveMetrics(plugin.NameLinux)
 			if err == pmm.ErrNoService {
 				fmt.Printf("[linux:metrics]   OK, no system %s under monitoring.\n", admin.ServiceName)
 			} else if err != nil {
@@ -944,7 +944,7 @@ An optional list of instances (scrape targets) can be provided.
 				fmt.Printf("[linux:metrics]   OK, removed system %s from monitoring.\n", admin.ServiceName)
 			}
 
-			err = admin.RemoveMetrics("mongodb")
+			err = admin.RemoveMetrics(plugin.NameMongoDB)
 			if err == pmm.ErrNoService {
 				fmt.Printf("[mongodb:metrics] OK, no MongoDB metrics %s under monitoring.\n", admin.ServiceName)
 			} else if err != nil {
@@ -953,7 +953,7 @@ An optional list of instances (scrape targets) can be provided.
 				fmt.Printf("[mongodb:metrics] OK, removed MongoDB metrics %s from monitoring.\n", admin.ServiceName)
 			}
 
-			err = admin.RemoveQueries("mongodb")
+			err = admin.RemoveQueries(plugin.NameMongoDB)
 			if err == pmm.ErrNoService {
 				fmt.Printf("[mongodb:queries] OK, no MongoDB queries %s under monitoring.\n", admin.ServiceName)
 			} else if err != nil {
@@ -971,7 +971,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := admin.RemoveMetrics("mongodb"); err != nil {
+			if err := admin.RemoveMetrics(plugin.NameMongoDB); err != nil {
 				fmt.Printf("Error removing MongoDB metrics %s: %s\n", admin.ServiceName, err)
 				os.Exit(1)
 			}
@@ -986,7 +986,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := admin.RemoveQueries("mongodb"); err != nil {
+			if err := admin.RemoveQueries(plugin.NameMongoDB); err != nil {
 				fmt.Printf("Error removing MongoDB queries %s: %s\n", admin.ServiceName, err)
 				os.Exit(1)
 			}
@@ -1001,7 +1001,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := admin.RemoveMetrics("linux")
+			err := admin.RemoveMetrics(plugin.NameLinux)
 			if err == pmm.ErrNoService {
 				fmt.Printf("[linux:metrics] OK, no system %s under monitoring.\n", admin.ServiceName)
 			} else if err != nil {
@@ -1010,7 +1010,7 @@ An optional list of instances (scrape targets) can be provided.
 				fmt.Printf("[linux:metrics] OK, removed system %s from monitoring.\n", admin.ServiceName)
 			}
 
-			err = admin.RemoveMetrics("postgresql")
+			err = admin.RemoveMetrics(plugin.NamePostgreSQL)
 			if err == pmm.ErrNoService {
 				fmt.Printf("[postgresql:metrics] OK, no PostgreSQL metrics %s under monitoring.\n", admin.ServiceName)
 			} else if err != nil {
@@ -1028,7 +1028,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := admin.RemoveMetrics("postgresql"); err != nil {
+			if err := admin.RemoveMetrics(plugin.NamePostgreSQL); err != nil {
 				fmt.Printf("Error removing PostgreSQL metrics %s: %s\n", admin.ServiceName, err)
 				os.Exit(1)
 			}
@@ -1043,7 +1043,7 @@ An optional list of instances (scrape targets) can be provided.
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := admin.RemoveMetrics("proxysql"); err != nil {
+			if err := admin.RemoveMetrics(plugin.NameProxySQL); err != nil {
 				fmt.Printf("Error removing ProxySQL metrics %s: %s\n", admin.ServiceName, err)
 				os.Exit(1)
 			}
@@ -1411,11 +1411,25 @@ Usually, it runs automatically when ssm-client package is uninstalled to remove 
 despite SSM server is alive or not.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			count := admin.Uninstall()
-			if count == 0 {
-				fmt.Println("OK, no services found.")
+			fileExists := pmm.FileExists(pmm.ConfigFile)
+			count, clientErr, serverErr := admin.Uninstall()
+
+			if clientErr != nil {
+				fmt.Printf("client: FAIL, %+v.\n", clientErr)
 			} else {
-				fmt.Printf("OK, %d services were removed.\n", count)
+				if count == 0 {
+					fmt.Println("client: OK, no services found.")
+				} else {
+					fmt.Printf("client: OK, %d services were removed.\n", count)
+				}
+			}
+
+			if fileExists {
+				if serverErr == nil {
+					fmt.Println("server: OK, data will be removed.")
+				} else {
+					fmt.Printf("server: FAIL, %+v\n", serverErr)
+				}
 			}
 			os.Exit(0)
 		},

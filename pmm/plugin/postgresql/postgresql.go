@@ -7,12 +7,19 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/lib/pq"
 
 	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
 	"github.com/shatteredsilicon/ssm-client/pmm/utils"
+)
+
+// regexps to extract version numbers from the `SELECT version()` output
+var (
+	postgresDBRegexp  = regexp.MustCompile(`PostgreSQL ([\d\.]+)`)
+	cockroachDBRegexp = regexp.MustCompile(`CockroachDB CCL (v[\d\.]+)`)
 )
 
 // Flags are PostgreSQL specific flags.
@@ -378,12 +385,29 @@ func testConnection(ctx context.Context, dsn string) error {
 
 func getInfo(ctx context.Context, db *sql.DB) (*plugin.Info, error) {
 	info := &plugin.Info{}
-	err := db.QueryRowContext(ctx, "SELECT inet_server_addr(), inet_server_port(), version()").Scan(&info.Hostname, &info.Port, &info.Version)
+	var engineVersion string
+	err := db.QueryRowContext(ctx, "SELECT inet_server_addr(), inet_server_port(), version()").Scan(&info.Hostname, &info.Port, &engineVersion)
 	if err != nil {
 		return nil, err
 	}
-	info.Distro = "PostgreSQL"
+	info.Distro, info.Version = engineAndVersionFromPlainText(engineVersion)
 	return info, nil
+}
+
+func engineAndVersionFromPlainText(databaseVersion string) (string, string) {
+	var engine string
+	var engineVersion string
+	switch {
+	case postgresDBRegexp.MatchString(databaseVersion):
+		engine = "PostgreSQL"
+		submatch := postgresDBRegexp.FindStringSubmatch(databaseVersion)
+		engineVersion = submatch[1]
+	case cockroachDBRegexp.MatchString(databaseVersion):
+		engine = "CockroachDB"
+		submatch := cockroachDBRegexp.FindStringSubmatch(databaseVersion)
+		engineVersion = submatch[1]
+	}
+	return engine, engineVersion
 }
 
 type errs []error

@@ -46,6 +46,7 @@ type Config struct {
 	ServerPassword    string `yaml:"server_password,omitempty"`
 	ServerSSL         bool   `yaml:"server_ssl,omitempty"`
 	ServerInsecureSSL bool   `yaml:"server_insecure_ssl,omitempty"`
+	ManagedAPIPath    string `yaml:"managed_api_path"`
 }
 
 // LoadConfig read SSM client config file.
@@ -66,6 +67,11 @@ func (a *Admin) LoadConfig() error {
 	if a.Config.BindAddress == "" {
 		a.Config.BindAddress = a.Config.ClientAddress
 	}
+
+	if a.Config.ManagedAPIPath == "" {
+		a.Config.ManagedAPIPath = managedAPIBasePath
+	}
+
 	return nil
 }
 
@@ -274,6 +280,7 @@ What ports to map you can find from "ssm-admin check-network" output once you ad
 	}
 
 	// Write the config.
+	a.Config.ManagedAPIPath = managedAPIBasePath
 	if err := a.writeConfig(); err != nil {
 		return fmt.Errorf("Unable to write config file %s: %s", ConfigFile, err)
 	}
@@ -293,6 +300,11 @@ What ports to map you can find from "ssm-admin check-network" output once you ad
 func (a *Admin) writeConfig() error {
 	bytes, _ := yaml.Marshal(a.Config)
 	return ioutil.WriteFile(ConfigFile, bytes, 0600)
+}
+
+// removeConfig remove config file
+func (a *Admin) removeConfig() error {
+	return os.Remove(ConfigFile)
 }
 
 // syncAgentConfig sync agent config.

@@ -40,7 +40,7 @@ func (m *Metrics) Init(ctx context.Context, pmmUserPassword string) (*plugin.Inf
 
 // Name of the exporter.
 func (m Metrics) Name() string {
-	return "postgresql"
+	return plugin.NamePostgreSQL
 }
 
 // DefaultPort returns default port.
@@ -62,7 +62,7 @@ func (m Metrics) Environment() []string {
 
 // Executable is a name of exporter executable under PMMBaseDir.
 func (m Metrics) Executable() string {
-	return "postgres_exporter"
+	return plugin.PostgreSQLExporter
 }
 
 // KV is a list of additional Key-Value data stored in consul.
