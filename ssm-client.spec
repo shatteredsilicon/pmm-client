@@ -61,7 +61,7 @@ cd %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter
 
 go install github.com/shatteredsilicon/mongodb_exporter
 go install github.com/shatteredsilicon/proxysql_exporter
-go install github.com/shatteredsilicon/ssm-client
+go install -ldflags="-X 'github.com/shatteredsilicon/ssm-client/pmm.Version=%{_version}'" github.com/shatteredsilicon/ssm-client
 go install github.com/shatteredsilicon/mysqld_exporter
 go install github.com/shatteredsilicon/pid-watchdog
 go install github.com/shatteredsilicon/qan-agent/bin/...
