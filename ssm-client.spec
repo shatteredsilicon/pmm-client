@@ -3,9 +3,9 @@
 %define _GOPATH %{_builddir}/go
 
 Name:           ssm-client
-Summary:        Percona Monitoring and Management Client
+Summary:        Shattered Silicon Monitoring Client
 Version:        %{_version}
-Release:        11%{?dist}
+Release:        1%{?dist}
 Group:          Applications/Databases
 License:        AGPLv3
 Vendor:         Percona LLC
@@ -15,10 +15,10 @@ AutoReq:        no
 BuildRequires:  glibc-devel, golang, unzip, gzip, make, perl-ExtUtils-MakeMaker, git
 
 %description
-Percona Monitoring and Management (PMM) is an open-source platform for managing and monitoring MySQL and MongoDB
+Shattered Silicon Monitoring (SSM) is an open-source platform for managing and monitoring MySQL and MongoDB
 performance. It is developed by Percona in collaboration with experts in the field of managed database services,
 support and consulting.
-PMM is a free and open-source solution that you can run in your own environment for maximum security and reliability.
+SSM is a free and open-source solution that you can run in your own environment for maximum security and reliability.
 It provides thorough time-based analysis for MySQL and MongoDB servers to ensure that your data works as efficiently
 as possible.
 
