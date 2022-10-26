@@ -48,7 +48,7 @@ tar -C %{_GOPATH}/src/github.com/shatteredsilicon -zxf %{_builddir}/ssm-client/q
 mv %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/vendor/github.com/prometheus/promu %{_GOPATH}/src/github.com/prometheus/
 cp -R %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/vendor %{_GOPATH}/src/github.com/prometheus/promu/
 cd %{_GOPATH}/src/github.com/prometheus/promu/
-    go install .
+    go install -ldflags="-s -w" .
 
 ln -s %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter %{_GOPATH}/src/github.com/prometheus/node_exporter
 cd %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter
@@ -56,15 +56,15 @@ cd %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter
 	%{__mv} node_exporter %{_GOPATH}/bin
 
 cd %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter
-	go build github.com/shatteredsilicon/postgres_exporter/cmd/postgres_exporter
+	go build -ldflags="-s -w" github.com/shatteredsilicon/postgres_exporter/cmd/postgres_exporter
 	%{__mv} postgres_exporter %{_GOPATH}/bin
 
-go install github.com/shatteredsilicon/mongodb_exporter
-go install github.com/shatteredsilicon/proxysql_exporter
-go install -ldflags="-X 'github.com/shatteredsilicon/ssm-client/pmm.Version=%{_version}'" github.com/shatteredsilicon/ssm-client
-go install github.com/shatteredsilicon/mysqld_exporter
-go install github.com/shatteredsilicon/pid-watchdog
-go install github.com/shatteredsilicon/qan-agent/bin/...
+go install -ldflags="-s -w" github.com/shatteredsilicon/mongodb_exporter
+go install -ldflags="-s -w" github.com/shatteredsilicon/proxysql_exporter
+go install -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/pmm.Version=%{_version}'" github.com/shatteredsilicon/ssm-client
+go install -ldflags="-s -w" github.com/shatteredsilicon/mysqld_exporter
+go install -ldflags="-s -w" github.com/shatteredsilicon/pid-watchdog
+go install -ldflags="-s -w" github.com/shatteredsilicon/qan-agent/bin/...
 
 strip %{_GOPATH}/bin/* || true
 
