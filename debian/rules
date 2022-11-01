@@ -1,0 +1,72 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+%:
+	dh $@
+
+TMP=$(CURDIR)/debian/tmp
+
+export GOPATH=$(CURDIR)/go
+export GO111MODULE=off
+export GOROOT=/usr/lib/go-1.17
+export PATH:=/usr/lib/go-1.17/bin:$(PATH)
+
+override_dh_auto_build:
+	mkdir -p $(GOPATH)/src/github.com/prometheus
+	mkdir -p $(GOPATH)/src/github.com/shatteredsilicon
+	mkdir -p $(GOPATH)/bin
+
+	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/mongodb_exporter-*.tar.gz
+	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/mysqld_exporter-*.tar.gz
+	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/node_exporter-*.tar.gz
+	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/pid-watchdog-*.tar.gz
+	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/ssm-client-*.tar.gz
+	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/postgres_exporter-*.tar.gz
+	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/proxysql_exporter-*.tar.gz
+	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/qan-agent-*.tar.gz
+
+	# install promu
+	mv $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/vendor/github.com/prometheus/promu $(GOPATH)/src/github.com/prometheus/
+	cp -R $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/vendor $(GOPATH)/src/github.com/prometheus/promu/
+	cd $(GOPATH)/src/github.com/prometheus/promu/ && \
+		go install -ldflags="-s -w" .
+
+	ln -s $(GOPATH)/src/github.com/shatteredsilicon/node_exporter $(GOPATH)/src/github.com/prometheus/node_exporter
+	cd $(GOPATH)/src/github.com/shatteredsilicon/node_exporter && \
+		make -j$(NPROCS) build && \
+		mv node_exporter $(GOPATH)/bin
+
+	cd $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter && \
+		go build -ldflags="-s -w" github.com/shatteredsilicon/postgres_exporter/cmd/postgres_exporter && \
+		mv postgres_exporter $(GOPATH)/bin
+
+	go install -ldflags="-s -w" github.com/shatteredsilicon/mongodb_exporter
+	go install -ldflags="-s -w" github.com/shatteredsilicon/proxysql_exporter
+	go install -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/pmm.Version=%{_version}'" github.com/shatteredsilicon/ssm-client
+	go install -ldflags="-s -w" github.com/shatteredsilicon/mysqld_exporter
+	go install -ldflags="-s -w" github.com/shatteredsilicon/pid-watchdog
+	go install -ldflags="-s -w" github.com/shatteredsilicon/qan-agent/bin/...
+
+override_dh_auto_install:
+	@echo "RULES.$@"
+	mkdir -p $(TMP)
+	cp $(GOPATH)/bin/ssm-client $(TMP)/ssm-admin
+	cp $(GOPATH)/bin/ssm-client $(TMP)/pmm-admin
+	cp -f $(GOPATH)/bin/node_exporter $(TMP)/node_exporter
+	cp -f $(GOPATH)/bin/mysqld_exporter $(TMP)/mysqld_exporter
+	cp -f $(GOPATH)/bin/postgres_exporter $(TMP)/postgres_exporter
+	cp -f $(GOPATH)/bin/mongodb_exporter $(TMP)/mongodb_exporter
+	cp -f $(GOPATH)/bin/proxysql_exporter $(TMP)/proxysql_exporter
+	cp -f $(GOPATH)/bin/ssm-qan-agent $(TMP)/ssm-qan-agent
+	cp -f $(GOPATH)/bin/ssm-qan-agent-installer $(TMP)/ssm-qan-agent-installer
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/queries-mysqld.yml $(TMP)/queries-mysqld.yml
+	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/example.prom $(TMP)/example.prom
+	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/ssm-client/scripts/ssm-dashboard $(TMP)/ssm-dashboard

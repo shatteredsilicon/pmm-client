@@ -1,0 +1,12 @@
+ssm-admin /usr/sbin/
+pmm-admin /usr/sbin/
+node_exporter /opt/ss/ssm-client/
+mysqld_exporter /opt/ss/ssm-client/
+postgres_exporter /opt/ss/ssm-client/
+mongodb_exporter /opt/ss/ssm-client/
+proxysql_exporter /opt/ss/ssm-client/
+ssm-qan-agent /opt/ss/qan-agent/bin/
+ssm-qan-agent-installer /opt/ss/qan-agent/bin/
+queries-mysqld.yml /opt/ss/ssm-client/
+example.prom /opt/ss/ssm-client/textfile-collector/
+ssm-dashboard /opt/ss/ssm-client/

@@ -1,0 +1,5 @@
+#!/bin/bash
+# uninstall
+if [ "$1" = "remove" ]; then
+    ssm-admin uninstall
+fi
