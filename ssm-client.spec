@@ -8,16 +8,16 @@ Version:        %{_version}
 Release:        1%{?dist}
 Group:          Applications/Databases
 License:        AGPLv3
-Vendor:         Percona LLC
-URL:            https://percona.com
+Vendor:         Shattered Silicon
+URL:            https://shatteredsilicon.net
 Source:         ssm-client-%{_version}.tar.gz
 AutoReq:        no
 BuildRequires:  glibc-devel, golang, unzip, gzip, make, perl-ExtUtils-MakeMaker, git
 
 %description
 Shattered Silicon Monitoring (SSM) is an open-source platform for managing and monitoring MySQL and MongoDB
-performance. It is developed by Percona in collaboration with experts in the field of managed database services,
-support and consulting.
+performance. It is a fork of Percona Monitoring and Management (PMM), which is developed by Percona in collaboration
+with experts in the field of managed database services, and further improved by Shattered Silicon.
 SSM is a free and open-source solution that you can run in your own environment for maximum security and reliability.
 It provides thorough time-based analysis for MySQL and MongoDB servers to ensure that your data works as efficiently
 as possible.
