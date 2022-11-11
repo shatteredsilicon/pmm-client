@@ -1,0 +1,7 @@
+#!/bin/bash
+# uninstall
+if [ "$1" = "remove" ]; then
+    rm -rf /opt/ss/ssm-client
+    rm -rf /opt/ss/qan-agent
+    echo "Uninstall complete."
+fi
