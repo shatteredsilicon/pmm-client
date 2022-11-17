@@ -29,29 +29,29 @@ type Queries struct {
 }
 
 // Init initializes plugin.
-func (m *Queries) Init(ctx context.Context, pmmUserPassword string) (*plugin.Info, error) {
-	info, err := mongodb.Init(ctx, m.dsn, m.args, m.pmmBaseDir)
+func (q *Queries) Init(ctx context.Context, pmmUserPassword string) (*plugin.Info, error) {
+	info, err := mongodb.Init(ctx, q.dsn, q.args, q.pmmBaseDir)
 	if err != nil {
 		return nil, err
 	}
-	m.dsn = info.DSN
+	q.dsn = info.DSN
 	return info, nil
 }
 
 // Name of the service.
-func (m Queries) Name() string {
+func (q Queries) Name() string {
 	return plugin.NameMongoDB
 }
 
 // InstanceTypeName of the service.
 // Deprecated: QAN API should use `mongodb` not `mongo`.
-func (m Queries) InstanceTypeName() string {
+func (q Queries) InstanceTypeName() string {
 	return "mongo"
 }
 
 // Config returns pc.QAN.
-func (m Queries) Config() pc.QAN {
-	exampleQueries := !m.queriesFlags.DisableQueryExamples
+func (q Queries) Config() pc.QAN {
+	exampleQueries := !q.queriesFlags.DisableQueryExamples
 	return pc.QAN{
 		ExampleQueries: &exampleQueries,
 	}

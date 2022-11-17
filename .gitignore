@@ -6,3 +6,4 @@
 distro/
 ssm-admin
 ssm.yml
+vendor/

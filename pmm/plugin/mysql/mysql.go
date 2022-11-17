@@ -27,6 +27,8 @@ type Flags struct {
 	CreateUserPassword string
 	MaxUserConn        uint16
 	Force              bool
+
+	FilterOmit []string
 }
 
 // Init verifies MySQL connection and creates PMM user if requested.

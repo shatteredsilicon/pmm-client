@@ -1544,6 +1544,7 @@ func main() {
 		cmd.Flags().Uint16Var(&flagMySQL.MaxUserConn, "create-user-maxconn", 10, "max user connections for a new user")
 		cmd.Flags().BoolVar(&flagMySQL.Force, "force", false, "force to create/update MySQL user")
 		cmd.Flags().BoolVar(&flagDisableSSL, "disable-ssl", false, "disable ssl mode on exporter")
+		cmd.Flags().StringSliceVar(&flagMySQL.FilterOmit, "qan-filter-omit", nil, "queries that should be omitted, split by comma")
 	}
 	// Common MySQL Metrics flags.
 	addCommonMySQLMetricsFlags := func(cmd *cobra.Command) {

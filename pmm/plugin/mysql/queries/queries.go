@@ -82,3 +82,8 @@ func (q Queries) Config() pc.QAN {
 		RetainSlowLogs:  &q.flags.RetainSlowLogs,
 	}
 }
+
+// FilterOmit returns queries that should be omitted
+func (q Queries) FilterOmit() []string {
+	return q.mysqlFlags.FilterOmit
+}
