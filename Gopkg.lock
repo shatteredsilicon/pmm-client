@@ -540,7 +540,7 @@
   revision = "e2103e2c35297fb7e17febb81e49b312087a2372"
 
 [[projects]]
-  digest = "1:02b3d5f7c5e2e9be395f7a05a21bb5e3778cf01d84a6e7a1c964cf08038d85c3"
+  digest = "1:03dfdfc7c2f3080c8e558b7c24af1fa64fd85ff46067b30bcedfb0168f2f83a4"
   name = "github.com/shatteredsilicon/ssm"
   packages = [
     "proto",
@@ -548,7 +548,7 @@
     "version",
   ]
   pruneopts = "NUT"
-  revision = "7a9f3c5b23e3f498dbe597cdaca95f6c5d7bdf05"
+  revision = "b00aab5447e7f481eec150bc4fd6ba1137260b4f"
 
 [[projects]]
   digest = "1:75afc2cb6bb9e34e3ea2988450da1d6141df8cf3339aafa93b59947f10ce8106"
