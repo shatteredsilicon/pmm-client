@@ -75,19 +75,14 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 	}
 
 	var filterOmit []string
-	mysqlQueries, isMySQL := q.(*queries.Queries)
-	if isMySQL {
+	if mysqlQueries, isMySQL := q.(*queries.Queries); isMySQL {
 		filterOmit = mysqlQueries.FilterOmit()
 	}
 
 	// Register agent if config file does not exist.
 	agentConfigFile := fmt.Sprintf("%s/config/agent.conf", AgentBaseDir)
 	if !FileExists(agentConfigFile) {
-		if err := a.registerAgent(filterOmit); err != nil {
-			return nil, err
-		}
-	} else if isMySQL {
-		if err := updateAgentFilterOmit(agentConfigFile, filterOmit); err != nil {
+		if err := a.registerAgent(); err != nil {
 			return nil, err
 		}
 	}
@@ -100,7 +95,7 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 	parentUUID, err := a.getAgentInstance(agentID)
 	if err == errNoInstance {
 		// If agent is orphaned, let's re-register it.
-		if err := a.registerAgent(filterOmit); err != nil {
+		if err := a.registerAgent(); err != nil {
 			return nil, err
 		}
 		// Get new agent id.
@@ -165,6 +160,7 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 	qanConfig := q.Config()
 	qanConfig.UUID = instance.UUID
 	qanConfig.Interval = 60
+	qanConfig.FilterOmit = filterOmit
 	if err := a.startQAN(agentID, qanConfig); err != nil {
 		return nil, err
 	}
@@ -463,32 +459,6 @@ func getAgentID(configFile string) (string, error) {
 	return config.UUID, nil
 }
 
-type agentConfig struct {
-	pc.Agent
-	FilterOmit []string
-}
-
-// updateAgentFilterOmit updates FilterOmit field in agent config
-func updateAgentFilterOmit(configFile string, filterOmit []string) error {
-	jsonData, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return err
-	}
-
-	config := &agentConfig{}
-	if err := json.Unmarshal(jsonData, &config); err != nil {
-		return err
-	}
-
-	config.FilterOmit = filterOmit
-	jsonData, err = json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(configFile, jsonData, 0600)
-}
-
 // startQAN enable QAN on agent through QAN API.
 func (a *Admin) startQAN(agentID string, config pc.QAN) error {
 	cmdName := "StartTool"
@@ -541,7 +511,7 @@ func (a *Admin) sendQANCmd(agentID, cmdName string, data []byte) error {
 }
 
 // registerAgent register agent on QAN API using agent installer.
-func (a *Admin) registerAgent(filterOmit []string) error {
+func (a *Admin) registerAgent() error {
 	// Remove agent dirs to ensure clean installation. Using full paths to avoid unexpected removals.
 	os.RemoveAll(fmt.Sprintf("%s/%s", AgentBaseDir, "config"))
 	os.RemoveAll(fmt.Sprintf("%s/%s", AgentBaseDir, "data"))
@@ -558,9 +528,6 @@ func (a *Admin) registerAgent(filterOmit []string) error {
 	if a.Config.ServerPassword != "" {
 		args = append(args, fmt.Sprintf("-server-user=%s", a.Config.ServerUser),
 			fmt.Sprintf("-server-pass=%s", a.Config.ServerPassword))
-	}
-	if len(filterOmit) > 0 {
-		args = append(args, fmt.Sprintf("-filter-omit=%s", strings.Join(filterOmit, ",")))
 	}
 	args = append(args, fmt.Sprintf("%s/%s", a.serverURL, qanAPIBasePath))
 	if _, err := exec.Command(path, args...).Output(); err != nil {
