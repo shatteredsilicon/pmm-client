@@ -12,7 +12,11 @@ Vendor:         Shattered Silicon
 URL:            https://shatteredsilicon.net
 Source:         ssm-client-%{_version}.tar.gz
 AutoReq:        no
-BuildRequires:  glibc-devel, golang, unzip, gzip, make, perl-ExtUtils-MakeMaker, git
+BuildRequires:  glibc-devel, golang, unzip, gzip, make, perl-ExtUtils-MakeMaker, git, systemd
+
+Requires(post):     systemd
+Requires(preun):    systemd
+Requires(postun):   systemd
 
 %description
 Shattered Silicon Monitoring (SSM) is an open-source platform for managing and monitoring MySQL and MongoDB
@@ -68,23 +72,20 @@ go install -ldflags="-s -w" github.com/shatteredsilicon/qan-agent/bin/...
 
 strip %{_GOPATH}/bin/* || true
 
-%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/example.prom		%{_builddir}/ssm-client/
-%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/queries-mysqld.yml	%{_builddir}/ssm-client/
-%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/ssm-client/scripts/ssm-dashboard	%{_builddir}/ssm-client/
+%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/example.prom                       %{_builddir}/ssm-client/
+%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/queries-mysqld.yml               %{_builddir}/ssm-client/
+%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/ssm-client/scripts/ssm-dashboard                 %{_builddir}/ssm-client/
 
 %install
-%if 0%{?rhel} == 5
-    install -m 0755 -d $RPM_BUILD_ROOT/usr/bin
-    install -m 0755 %{_GOPATH}/bin/ssm-client $RPM_BUILD_ROOT/usr/bin/ssm-admin
-    install -m 0755 %{_GOPATH}/bin/ssm-client $RPM_BUILD_ROOT/usr/bin/pmm-admin
-%else
-    install -m 0755 -d $RPM_BUILD_ROOT/usr/sbin
-    install -m 0755 %{_GOPATH}/bin/ssm-client $RPM_BUILD_ROOT/usr/sbin/ssm-admin
-    install -m 0755 %{_GOPATH}/bin/ssm-client $RPM_BUILD_ROOT/usr/sbin/pmm-admin
-%endif
+install -m 0755 -d $RPM_BUILD_ROOT/usr/sbin
+install -m 0755 %{_GOPATH}/bin/ssm-client $RPM_BUILD_ROOT/usr/sbin/ssm-admin
+install -m 0755 %{_GOPATH}/bin/ssm-client $RPM_BUILD_ROOT/usr/sbin/pmm-admin
 install -m 0755 -d $RPM_BUILD_ROOT/opt/ss/ssm-client
 install -m 0755 -d $RPM_BUILD_ROOT/opt/ss/qan-agent/bin
 install -m 0755 -d $RPM_BUILD_ROOT/opt/ss/ssm-client/textfile-collector
+install -m 0755 -d $RPM_BUILD_ROOT/lib/systemd/system
+install -m 0755 -d $RPM_BUILD_ROOT/etc/rsyslog.d/
+install -m 0755 -d $RPM_BUILD_ROOT/etc/logrotate.d/
 install -m 0755 %{_GOPATH}/bin/node_exporter $RPM_BUILD_ROOT/opt/ss/ssm-client/
 install -m 0755 %{_GOPATH}/bin/mysqld_exporter $RPM_BUILD_ROOT/opt/ss/ssm-client/
 install -m 0755 %{_GOPATH}/bin/postgres_exporter $RPM_BUILD_ROOT/opt/ss/ssm-client/
@@ -95,48 +96,56 @@ install -m 0755 %{_GOPATH}/bin/ssm-qan-agent-installer $RPM_BUILD_ROOT/opt/ss/qa
 install -m 0644 %{_builddir}/ssm-client/queries-mysqld.yml $RPM_BUILD_ROOT/opt/ss/ssm-client
 install -m 0755 %{_builddir}/ssm-client/example.prom $RPM_BUILD_ROOT/opt/ss/ssm-client/textfile-collector/
 install -m 0755 %{_builddir}/ssm-client/ssm-dashboard $RPM_BUILD_ROOT/opt/ss/ssm-client/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/support-files/config/node_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/support-files/config/mysqld_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/support-files/config/mongodb_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter/support-files/config/postgres_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter/support-files/config/proxysql_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/ssm-linux-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-linux-metrics.service
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/ssm-mysql-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-mysql-metrics.service
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/ssm-mysql-queries.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-mysql-queries.service
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/ssm-mongodb-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-mongodb-metrics.service
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/ssm-mongodb-queries.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-mongodb-queries.service
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter/ssm-postgresql-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-postgresql-metrics.service
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter/ssm-proxysql-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-proxysql-metrics.service
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/support-files/logrotate.d/* $RPM_BUILD_ROOT/etc/logrotate.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/support-files/logrotate.d/* $RPM_BUILD_ROOT/etc/logrotate.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/support-files/logrotate.d/* $RPM_BUILD_ROOT/etc/logrotate.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter/support-files/logrotate.d/* $RPM_BUILD_ROOT/etc/logrotate.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter/support-files/logrotate.d/* $RPM_BUILD_ROOT/etc/logrotate.d/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/support-files/logrotate.d/* $RPM_BUILD_ROOT/etc/logrotate.d/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
-# upgrade
-ssm-admin ping > /dev/null
-if [ $? = 0 ] && [ "$1" = "2" ]; then
-%if 0%{?rhel} == 6
-    for file in $(find -L /etc/init.d -maxdepth 1 -name "pmm-*")
-    do
-        sed -i 's|^name=$(basename $0)|name=$(basename $(readlink -f $0))|' "$file"
-    done
-    for file in $(find -L /etc/init.d -maxdepth 1 -name "pmm-linux-metrics*")
-    do
-        sed -i  "s/,meminfo_numa /,meminfo_numa,textfile /" "$file"
-    done
-    for file in $(find -L /etc/init -maxdepth 1 -name "pmm-linux-metrics*")
-    do
-        sed -i  "s/,meminfo_numa /,meminfo_numa,textfile /" "$file"
-    done
-%else
-    for file in $(find -L /etc/systemd/system -maxdepth 1 -name "pmm-*")
-    do
-        network_exists=$(grep -c "network.target" "$file")
-        if [ $network_exists = 0 ]; then
-            sed -i 's/Unit]/Unit]\nAfter=network.target\nAfter=syslog.target/' "$file"
-        fi
-    done
-    for file in $(find -L /etc/systemd/system -maxdepth 1 -name "pmm-linux-metrics*")
-    do
-        sed -i  "s/,meminfo_numa /,meminfo_numa,textfile /" "$file"
-    done
-%endif
-    ssm-admin restart --all
-fi
+%systemd_post ssm-linux-metrics.service
+%systemd_post ssm-mysql-metrics.service
+%systemd_post ssm-mysql-queries.service
+%systemd_post ssm-mongodb-metrics.service
+%systemd_post ssm-mongodb-queries.service
+%systemd_post ssm-postgresql-metrics.service
+%systemd_post ssm-proxysql-metrics.service
 
 %preun
 # uninstall
 if [ "$1" = "0" ]; then
     ssm-admin uninstall
 fi
+
+%systemd_preun ssm-linux-metrics.service
+%systemd_preun ssm-mysql-metrics.service
+%systemd_preun ssm-mysql-queries.service
+%systemd_preun ssm-mongodb-metrics.service
+%systemd_preun ssm-mongodb-queries.service
+%systemd_preun ssm-postgresql-metrics.service
+%systemd_preun ssm-proxysql-metrics.service
 
 %postun
 # uninstall
@@ -146,6 +155,14 @@ if [ "$1" = "0" ]; then
     echo "Uninstall complete."
 fi
 
+%systemd_postun ssm-linux-metrics.service
+%systemd_postun ssm-mysql-metrics.service
+%systemd_postun ssm-mysql-queries.service
+%systemd_postun ssm-mongodb-metrics.service
+%systemd_postun ssm-mongodb-queries.service
+%systemd_postun ssm-postgresql-metrics.service
+%systemd_postun ssm-proxysql-metrics.service
+
 %files
 %dir /opt/ss/ssm-client
 %dir /opt/ss/ssm-client/textfile-collector
@@ -153,10 +170,14 @@ fi
 /opt/ss/ssm-client/textfile-collector/*
 /opt/ss/ssm-client/*
 /opt/ss/qan-agent/bin/*
-%if 0%{?rhel} == 5
-    /usr/bin/ssm-admin
-    /usr/bin/pmm-admin
-%else
-    /usr/sbin/ssm-admin
-    /usr/sbin/pmm-admin
-%endif
+/usr/sbin/ssm-admin
+/usr/sbin/pmm-admin
+/lib/systemd/system/ssm-linux-metrics.service
+/lib/systemd/system/ssm-mysql-metrics.service
+/lib/systemd/system/ssm-mysql-queries.service
+/lib/systemd/system/ssm-mongodb-metrics.service
+/lib/systemd/system/ssm-mongodb-queries.service
+/lib/systemd/system/ssm-postgresql-metrics.service
+/lib/systemd/system/ssm-proxysql-metrics.service
+/etc/rsyslog.d/ssm-*.conf
+/etc/logrotate.d/ssm-*
