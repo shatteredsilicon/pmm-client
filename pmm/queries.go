@@ -30,7 +30,6 @@ import (
 	"time"
 
 	consul "github.com/hashicorp/consul/api"
-	service "github.com/percona/kardianos-service"
 	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
 	"github.com/shatteredsilicon/ssm-client/pmm/plugin/mysql/queries"
 	"github.com/shatteredsilicon/ssm-client/pmm/utils"
@@ -131,29 +130,9 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 		return nil, err
 	}
 
-	// Choose port.
-	port := 0
-	// Don't install service if we have already another one.
-	// 1 agent handles multiple instances for QAN.
-	if consulSvc == nil {
-		// Install and start service via platform service manager.
-		// We have to run agent before adding it to QAN.
-		svcConfig := &service.Config{
-			Name:        fmt.Sprintf("ssm-%s-queries-%d", q.Name(), port),
-			DisplayName: "SSM Query Analytics agent",
-			Description: "SSM Query Analytics agent",
-			Executable:  fmt.Sprintf("%s/bin/ssm-qan-agent", AgentBaseDir),
-			Arguments:   a.Args,
-		}
-		if err := installService(svcConfig); err != nil {
-			return nil, err
-		}
-	} else {
-		port = consulSvc.Port
-		// Ensure qan-agent is started if service exists, otherwise it won't be enabled for QAN.
-		if err := startService(fmt.Sprintf("ssm-%s-queries-%d", q.Name(), port)); err != nil {
-			return nil, err
-		}
+	// Ensure qan-agent is started if service exists, otherwise it won't be enabled for QAN.
+	if err := startService(fmt.Sprintf("ssm-%s-queries", q.Name())); err != nil {
+		return nil, err
 	}
 
 	// Start QAN by associating instance with agent.
@@ -176,12 +155,12 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 	}
 
 	// Add service to Consul.
-	serviceID := fmt.Sprintf("%s-%d", serviceType, port)
+	serviceID := fmt.Sprintf("%s", serviceType)
 	srv := consul.AgentService{
 		ID:      serviceID,
 		Service: serviceType,
 		Tags:    tags,
-		Port:    port,
+		Port:    0,
 	}
 	reg := consul.CatalogRegistration{
 		Node:    a.Config.ClientName,
@@ -227,7 +206,7 @@ func (a *Admin) RemoveQueries(name string) error {
 	}
 
 	// Ensure qan-agent is started, otherwise it will be an error to stop QAN.
-	if err := startService(fmt.Sprintf("ssm-%s-queries-%d", name, consulSvc.Port)); err != nil {
+	if err := startService(fmt.Sprintf("ssm-%s-queries", name)); err != nil {
 		return err
 	}
 
@@ -283,7 +262,7 @@ func (a *Admin) RemoveQueries(name string) error {
 		}
 
 		// Stop and uninstall service.
-		if err := uninstallService(fmt.Sprintf("ssm-%s-queries-%d", name, consulSvc.Port)); err != nil {
+		if err := stopService(fmt.Sprintf("ssm-%s-queries", name)); err != nil {
 			return err
 		}
 	} else {
