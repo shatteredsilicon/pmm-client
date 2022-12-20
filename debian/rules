@@ -57,7 +57,11 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	@echo "RULES.$@"
-	mkdir -p $(TMP)
+	install -d $(TMP)/rsyslog.d
+	install -d $(TMP)/logrotate.d
+	install -d $(TMP)/init.d
+	install -d $(TMP)/init
+	install -d $(TMP)/config
 	cp $(GOPATH)/bin/ssm-client $(TMP)/ssm-admin
 	cp $(GOPATH)/bin/ssm-client $(TMP)/pmm-admin
 	cp -f $(GOPATH)/bin/node_exporter $(TMP)/node_exporter
@@ -70,3 +74,39 @@ override_dh_auto_install:
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/queries-mysqld.yml $(TMP)/queries-mysqld.yml
 	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/example.prom $(TMP)/example.prom
 	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/ssm-client/scripts/ssm-dashboard $(TMP)/ssm-dashboard
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/ssm-linux-metrics.service $(TMP)/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/ssm-mysql-metrics.service $(TMP)/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/qan-agent/ssm-mysql-queries.service $(TMP)/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter/ssm-mongodb-metrics.service $(TMP)/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/qan-agent/ssm-mongodb-queries.service $(TMP)/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/ssm-postgresql-metrics.service $(TMP)/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/ssm-proxysql-metrics.service $(TMP)/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/support-files/config/node_exporter.conf $(TMP)/config/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/support-files/config/mysqld_exporter.conf $(TMP)/config/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter/support-files/config/mongodb_exporter.conf $(TMP)/config/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/support-files/config/postgres_exporter.conf $(TMP)/config/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/support-files/config/proxysql_exporter.conf $(TMP)/config/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/support-files/rsyslog.d/* $(TMP)/rsyslog.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/support-files/rsyslog.d/* $(TMP)/rsyslog.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter/support-files/rsyslog.d/* $(TMP)/rsyslog.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/support-files/rsyslog.d/* $(TMP)/rsyslog.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/support-files/rsyslog.d/* $(TMP)/rsyslog.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/qan-agent/support-files/rsyslog.d/* $(TMP)/rsyslog.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/support-files/logrotate.d/* $(TMP)/logrotate.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/support-files/logrotate.d/* $(TMP)/logrotate.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter/support-files/logrotate.d/* $(TMP)/logrotate.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/support-files/logrotate.d/* $(TMP)/logrotate.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/support-files/logrotate.d/* $(TMP)/logrotate.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/qan-agent/support-files/logrotate.d/* $(TMP)/logrotate.d/
+	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/support-files/init.d/* $(TMP)/init.d/
+	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/support-files/init.d/* $(TMP)/init.d/
+	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter/support-files/init.d/* $(TMP)/init.d/
+	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/support-files/init.d/* $(TMP)/init.d/
+	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/support-files/init.d/* $(TMP)/init.d/
+	install -m 0755 $(GOPATH)/src/github.com/shatteredsilicon/qan-agent/support-files/init.d/* $(TMP)/init.d/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/support-files/init/* $(TMP)/init/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/support-files/init/* $(TMP)/init/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter/support-files/init/* $(TMP)/init/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/support-files/init/* $(TMP)/init/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/support-files/init/* $(TMP)/init/
+	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/qan-agent/support-files/init/* $(TMP)/init/
