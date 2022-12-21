@@ -276,7 +276,7 @@ However, you can add another one with the different name just for testing purpos
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			linuxMetrics := linuxMetrics.New()
+			linuxMetrics := linuxMetrics.New(pmm.PMMBaseDir)
 			if _, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL); err != nil {
 				fmt.Println("Error adding linux metrics:", err)
 				os.Exit(1)
@@ -318,7 +318,7 @@ Table statistics is automatically disabled when there are more than 10000 tables
 				os.Exit(1)
 			}
 
-			linuxMetrics := linuxMetrics.New()
+			linuxMetrics := linuxMetrics.New(pmm.PMMBaseDir)
 			_, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL)
 			if err == pmm.ErrDuplicate {
 				fmt.Println("[linux:metrics] OK, already monitoring this system.")
@@ -329,7 +329,7 @@ Table statistics is automatically disabled when there are more than 10000 tables
 				fmt.Println("[linux:metrics] OK, now monitoring this system.")
 			}
 
-			mysqlMetrics := mysqlMetrics.New(flagMySQLMetrics, flagMySQL)
+			mysqlMetrics := mysqlMetrics.New(flagMySQLMetrics, flagMySQL, pmm.PMMBaseDir)
 			info, err := admin.AddMetrics(ctx, mysqlMetrics, false, flagDisableSSL)
 			if err == pmm.ErrDuplicate {
 				fmt.Println("[mysql:metrics] OK, already monitoring MySQL metrics.")
@@ -374,7 +374,7 @@ Table statistics is automatically disabled when there are more than 10000 tables
   ssm-admin add mysql:metrics -- --collect.perf_schema.eventsstatements
   ssm-admin add mysql:metrics -- --collect.perf_schema.eventswaits=false`,
 		Run: func(cmd *cobra.Command, args []string) {
-			mysqlMetrics := mysqlMetrics.New(flagMySQLMetrics, flagMySQL)
+			mysqlMetrics := mysqlMetrics.New(flagMySQLMetrics, flagMySQL, pmm.PMMBaseDir)
 			info, err := admin.AddMetrics(ctx, mysqlMetrics, false, flagDisableSSL)
 			if err != nil {
 				fmt.Println("Error adding MySQL metrics:", err)
@@ -448,7 +448,7 @@ a new user 'pmm' automatically using the given (auto-detected) PostgreSQL creden
 				os.Exit(1)
 			}
 
-			linuxMetrics := linuxMetrics.New()
+			linuxMetrics := linuxMetrics.New(pmm.PMMBaseDir)
 			_, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL)
 			if err == pmm.ErrDuplicate {
 				fmt.Println("[linux:metrics] OK, already monitoring this system.")
@@ -459,7 +459,7 @@ a new user 'pmm' automatically using the given (auto-detected) PostgreSQL creden
 				fmt.Println("[linux:metrics] OK, now monitoring this system.")
 			}
 
-			postgresqlMetrics := postgresqlMetrics.New(flagPostgreSQL)
+			postgresqlMetrics := postgresqlMetrics.New(flagPostgreSQL, pmm.PMMBaseDir)
 			info, err := admin.AddMetrics(ctx, postgresqlMetrics, false, flagDisableSSL)
 			if err == pmm.ErrDuplicate {
 				fmt.Println("[postgresql:metrics] OK, already monitoring PostgreSQL metrics.")
@@ -489,7 +489,7 @@ a new user 'pmm' automatically using the given (auto-detected) PostgreSQL creden
   ssm-admin add postgresql:metrics --user rdsuser --password abc123 --host my-rds.1234567890.us-east-1.rds.amazonaws.com my-rds
   ssm-admin add postgresql:metrics -- --extend.query-path /path/to/queries.yaml`,
 		Run: func(cmd *cobra.Command, args []string) {
-			postgresqlMetrics := postgresqlMetrics.New(flagPostgreSQL)
+			postgresqlMetrics := postgresqlMetrics.New(flagPostgreSQL, pmm.PMMBaseDir)
 			info, err := admin.AddMetrics(ctx, postgresqlMetrics, false, flagDisableSSL)
 			if err != nil {
 				fmt.Println("Error adding PostgreSQL metrics:", err)
@@ -521,7 +521,7 @@ When adding a MongoDB instance, you may provide --uri if the default one does no
 				os.Exit(1)
 			}
 
-			linuxMetrics := linuxMetrics.New()
+			linuxMetrics := linuxMetrics.New(pmm.PMMBaseDir)
 			_, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL)
 			if err == pmm.ErrDuplicate {
 				fmt.Println("[linux:metrics]   OK, already monitoring this system.")
@@ -634,7 +634,7 @@ When adding a ProxySQL instance, you may provide --dsn if the default one does n
 				os.Exit(1)
 			}
 
-			linuxMetrics := linuxMetrics.New()
+			linuxMetrics := linuxMetrics.New(pmm.PMMBaseDir)
 			_, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL)
 			if err == pmm.ErrDuplicate {
 				fmt.Println("[linux:metrics] OK, already monitoring this system.")
@@ -645,7 +645,7 @@ When adding a ProxySQL instance, you may provide --dsn if the default one does n
 				fmt.Println("[linux:metrics] OK, now monitoring this system.")
 			}
 
-			proxysqlMetrics := proxysqlMetrics.New(flagDSN)
+			proxysqlMetrics := proxysqlMetrics.New(flagDSN, pmm.PMMBaseDir)
 			info, err := admin.AddMetrics(ctx, proxysqlMetrics, false, flagDisableSSL)
 			if err != nil {
 				fmt.Println("Error adding proxysql metrics:", err)
@@ -663,7 +663,7 @@ When adding a ProxySQL instance, you may provide --dsn if the default one does n
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			proxysqlMetrics := proxysqlMetrics.New(flagDSN)
+			proxysqlMetrics := proxysqlMetrics.New(flagDSN, pmm.PMMBaseDir)
 			info, err := admin.AddMetrics(ctx, proxysqlMetrics, false, flagDisableSSL)
 			if err != nil {
 				fmt.Println("Error adding proxysql metrics:", err)

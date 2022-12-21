@@ -20,16 +20,24 @@ package pmm
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
 	consul "github.com/hashicorp/consul/api"
-	service "github.com/percona/kardianos-service"
 	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
 )
 
 // AddMetrics add metrics service to monitoring.
 func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, disableSSL bool) (*plugin.Info, error) {
-	info, err := m.Init(ctx, a.Config.MySQLPassword)
+	var sslKeyFile, sslCertFile string
+	if !disableSSL {
+		// Check and generate certificate if needed.
+		if err := a.checkSSLCertificate(); err != nil {
+			return nil, err
+		}
+		sslKeyFile = SSLKeyFile
+		sslCertFile = SSLCertFile
+	}
+
+	info, err := m.Init(ctx, a.Config.MySQLPassword, a.Config.BindAddress, ConfigFile, sslKeyFile, sslCertFile)
 	if err != nil {
 		return nil, err
 	}
@@ -44,13 +52,7 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 
 	serviceType := fmt.Sprintf("%s:metrics", m.Name())
 
-	// Check if we have already this service on Consul.
-	// When using force, we allow adding another service with different name.
-	name := ""
-	if m.Multiple() || force {
-		name = a.ServiceName
-	}
-	consulSvc, err := a.getConsulService(serviceType, name)
+	consulSvc, err := a.getConsulService(serviceType, "")
 	if err != nil {
 		return nil, err
 	}
@@ -62,13 +64,7 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 		return nil, err
 	}
 
-	// Choose port.
-	defaultPort := m.DefaultPort()
-	port, err := a.choosePort(a.ServicePort, defaultPort)
-	if err != nil {
-		return nil, err
-	}
-
+	port := m.Port()
 	scheme := "scheme_https"
 	if disableSSL {
 		scheme = "scheme_http"
@@ -85,7 +81,7 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 	}
 
 	// Add service to Consul.
-	serviceID := fmt.Sprintf("%s-%d", serviceType, port)
+	serviceID := fmt.Sprintf("%s", serviceType)
 	srv := consul.AgentService{
 		ID:      serviceID,
 		Service: serviceType,
@@ -113,42 +109,7 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 		}
 	}
 
-	args := []string{
-		fmt.Sprintf("-web.listen-address=%s:%d", a.Config.BindAddress, port),
-		fmt.Sprintf("-web.auth-file=%s", ConfigFile),
-	}
-
-	if !disableSSL {
-		// Check and generate certificate if needed.
-		if err := a.checkSSLCertificate(); err != nil {
-			return nil, err
-		}
-		args = append(args,
-			fmt.Sprintf("-web.ssl-key-file=%s", SSLKeyFile),
-			fmt.Sprintf("-web.ssl-cert-file=%s", SSLCertFile),
-		)
-	}
-
-	// Add additional args passed by plugin.
-	args = append(args, m.Args()...)
-	// Add additional args passed to ssm-admin.
-	args = append(args, a.Args...)
-
-	_, executable := filepath.Split(m.Executable())
-	if executable == "" {
-		return nil, fmt.Errorf("%s: invalid executable name: %s", m.Name(), m.Executable())
-	}
-
-	// Install and start service via platform service manager.
-	svcConfig := &service.Config{
-		Name:        fmt.Sprintf("ssm-%s-metrics-%d", m.Name(), port),
-		DisplayName: fmt.Sprintf("SSM Prometheus %s on port %d", m.Executable(), port),
-		Description: fmt.Sprintf("SSM Prometheus %s on port %d", m.Executable(), port),
-		Executable:  filepath.Join(PMMBaseDir, executable),
-		Arguments:   args,
-	}
-	svcConfig.Environment = append(svcConfig.Environment, m.Environment()...)
-	if err := installService(svcConfig); err != nil {
+	if err := startService(fmt.Sprintf("ssm-%s-metrics", m.Name())); err != nil {
 		return nil, err
 	}
 
@@ -184,8 +145,8 @@ func (a *Admin) RemoveMetrics(name string) error {
 	}
 
 	// Stop and uninstall service.
-	serviceName := fmt.Sprintf("ssm-%s-metrics-%d", name, consulSvc.Port)
-	if err := uninstallService(serviceName); err != nil {
+	serviceName := fmt.Sprintf("ssm-%s-metrics", name)
+	if err := stopService(serviceName); err != nil {
 		return err
 	}
 

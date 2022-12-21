@@ -280,7 +280,7 @@ func (a *Admin) StartStopMonitoring(action, svcType string) (affected bool, err 
 		return false, ErrNoService
 	}
 
-	svcName := fmt.Sprintf("ssm-%s-%d", strings.Replace(svcType, ":", "-", 1), consulSvc.Port)
+	svcName := fmt.Sprintf("ssm-%s", strings.Replace(svcType, ":", "-", 1))
 	switch action {
 	case "start":
 		if getServiceStatus(svcName) {
@@ -318,6 +318,16 @@ func (a *Admin) StartStopAllMonitoring(action string) (numOfAffected, numOfAll i
 	numOfAll = len(localServices)
 
 	for _, svcName := range localServices {
+		// only operate in-sync services
+		consulSvc, err := a.getConsulService(strings.Replace(strings.TrimLeft(svcName, "ssm-"), "-", ":", 1), "")
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		if consulSvc == nil {
+			continue
+		}
+
 		switch action {
 		case "start":
 			if getServiceStatus(svcName) {
@@ -494,50 +504,6 @@ Choose different name for this service.`,
 	return nil
 }
 
-// choosePort automatically choose the port for service.
-func (a *Admin) choosePort(port int, defaultPort int) (int, error) {
-	// If port is already defined then just verify that port.
-	if port > 0 {
-		// Check if user defined port is not used.
-		ok, err := a.availablePort(port)
-		if err != nil {
-			return port, err
-		}
-		if ok {
-			return port, nil
-		}
-		return port, fmt.Errorf("port %d is reserved by other service. Choose the different one.", port)
-	}
-	// Find the first available port starting the default one.
-	for i := defaultPort; i < defaultPort+1000; i++ {
-		ok, err := a.availablePort(i)
-		if err != nil {
-			return i, err
-		}
-		if ok {
-			return i, nil
-		}
-	}
-	return port, fmt.Errorf("ports %d-%d are reserved by other services. Try to specify the other port using --service-port",
-		port, port+1000)
-}
-
-// availablePort check if port is occupied by any service on Consul.
-func (a *Admin) availablePort(port int) (bool, error) {
-	node, _, err := a.consulAPI.Catalog().Node(a.Config.ClientName, nil)
-	if err != nil {
-		return false, err
-	}
-	if node != nil {
-		for _, svc := range node.Services {
-			if port == svc.Port {
-				return false, nil
-			}
-		}
-	}
-	return true, nil
-}
-
 // checkSSLCertificate check if SSL cert and key files exist and generate them if not.
 func (a *Admin) checkSSLCertificate() error {
 	if FileExists(SSLCertFile) && FileExists(SSLKeyFile) {
@@ -603,18 +569,18 @@ func (a *Admin) CheckVersion(ctx context.Context) (fatal bool, err error) {
 
 // CheckInstallation check for broken installation.
 func (a *Admin) CheckInstallation() (orphanedServices, missingServices []string) {
-	localServices := GetLocalServices()
+	activeServices := GetLocalActiveServices()
 
 	node, _, err := a.consulAPI.Catalog().Node(a.Config.ClientName, nil)
 	if err != nil || node == nil || len(node.Services) == 0 {
-		return localServices, []string{}
+		return activeServices, []string{}
 	}
 
 	// Find orphaned services: local system services that are not associated with Consul services.
 ForLoop1:
-	for _, s := range localServices {
+	for _, s := range activeServices {
 		for _, svc := range node.Services {
-			svcName := fmt.Sprintf("ssm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port)
+			svcName := fmt.Sprintf("ssm-%s", strings.Replace(svc.Service, ":", "-", 1))
 			if s == svcName {
 				continue ForLoop1
 			}
@@ -625,8 +591,8 @@ ForLoop1:
 	// Find missing services: Consul services that are missing locally.
 ForLoop2:
 	for _, svc := range node.Services {
-		svcName := fmt.Sprintf("ssm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port)
-		for _, s := range localServices {
+		svcName := fmt.Sprintf("ssm-%s", strings.Replace(svc.Service, ":", "-", 1))
+		for _, s := range activeServices {
 			if s == svcName {
 				continue ForLoop2
 			}
@@ -640,9 +606,9 @@ ForLoop2:
 // RepairInstallation repair installation.
 func (a *Admin) RepairInstallation() error {
 	orphanedServices, missingServices := a.CheckInstallation()
-	// Uninstall local services.
+	// stop local services.
 	for _, s := range orphanedServices {
-		if err := uninstallService(s); err != nil {
+		if err := stopService(s); err != nil {
 			return err
 		}
 	}
@@ -700,11 +666,11 @@ func (a *Admin) Uninstall() (count uint16, clientErr, serverErr error) {
 		}
 	}
 
-	// Find any local SSM services and try to uninstall ignoring the errors.
-	localServices := GetLocalServices()
+	// Find any local active SSM services and try to stop them, ignoring the errors.
+	localServices := GetLocalActiveServices()
 
 	for _, service := range localServices {
-		if err := uninstallService(service); err == nil {
+		if err := stopService(service); err == nil {
 			count++
 		}
 	}
@@ -760,11 +726,22 @@ func GetLocalServices() (services []string) {
 	return services
 }
 
+// GetLocalActiveServices finds local active SSM services
+func GetLocalActiveServices() (services []string) {
+	localServices := GetLocalServices()
+	for _, svcName := range localServices {
+		if getServiceStatus(svcName) {
+			services = append(services, svcName)
+		}
+	}
+	return
+}
+
 // GetServiceDirAndExtension returns dir and extension used to create system service
 func GetServiceDirAndExtension() (dir, extension string) {
 	switch service.Platform() {
 	case "linux-systemd":
-		dir = "/etc/systemd/system"
+		dir = "/lib/systemd/system"
 		extension = ".service"
 	case "linux-upstart":
 		dir = "/etc/init"

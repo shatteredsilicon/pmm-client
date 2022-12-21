@@ -4,11 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"path"
+	"strconv"
 	"strings"
 
 	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
 	"github.com/shatteredsilicon/ssm-client/pmm/plugin/mysql"
 	"github.com/shatteredsilicon/ssm-client/pmm/utils"
+	"gopkg.in/ini.v1"
 )
 
 var _ plugin.Metrics = (*Metrics)(nil)
@@ -23,31 +26,76 @@ type Flags struct {
 }
 
 // New returns *Metrics.
-func New(flags Flags, mysqlFlags mysql.Flags) *Metrics {
+func New(flags Flags, mysqlFlags mysql.Flags, ssmBaseDir string) *Metrics {
 	return &Metrics{
 		flags:      flags,
 		mysqlFlags: mysqlFlags,
+		ssmBaseDir: ssmBaseDir,
 	}
 }
 
 // Metrics implements plugin.Metrics.
 type Metrics struct {
-	flags      Flags
-	mysqlFlags mysql.Flags
-
+	flags         Flags
+	mysqlFlags    mysql.Flags
+	ssmBaseDir    string
+	port          int
 	dsn           string
 	optsToDisable []string
 }
 
 // Init initializes plugin.
-func (m *Metrics) Init(ctx context.Context, pmmUserPassword string) (*plugin.Info, error) {
-	info, err := mysql.Init(ctx, m.mysqlFlags, pmmUserPassword)
+func (m *Metrics) Init(
+	ctx context.Context,
+	ssmUserPassword string,
+	bindAddress string,
+	authFile string,
+	sslKeyFile string,
+	sslCertFile string,
+) (*plugin.Info, error) {
+	info, err := mysql.Init(ctx, m.mysqlFlags, ssmUserPassword)
 	if err != nil {
 		return nil, err
 	}
 	m.dsn = info.DSN
 
 	m.optsToDisable, err = optsToDisable(ctx, m.dsn, m.flags)
+	if err != nil {
+		return nil, err
+	}
+
+	cfgPath := path.Join(m.ssmBaseDir, "mysqld_exporter.conf")
+	cfgFile, err := ini.Load(cfgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	parts := strings.Split(cfgFile.Section("web").Key("listen-address").Value(), ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid configuration for web.listen-address")
+	}
+	port, err := strconv.ParseInt(parts[1], 10, 32)
+	if err != nil || port <= 0 {
+		return nil, fmt.Errorf("invalid configuration for web.listen-address")
+	}
+	m.port = int(port)
+
+	// updates collect args
+	for _, args := range m.collectArgs() {
+		if args == nil {
+			continue
+		}
+
+		for k, v := range args {
+			cfgFile.Section("collect").Key(k).SetValue(v)
+		}
+	}
+
+	cfgFile.Section("exporter").Key("dsn").SetValue(m.dsn)
+	cfgFile.Section("web").Key("auth-file").SetValue(authFile)
+	cfgFile.Section("web").Key("ssl-key-file").SetValue(sslKeyFile)
+	cfgFile.Section("web").Key("ssl-cert-file").SetValue(sslCertFile)
+	err = cfgFile.SaveTo(cfgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -60,74 +108,35 @@ func (m Metrics) Name() string {
 	return plugin.NameMySQL
 }
 
-// DefaultPort returns default port.
-func (m Metrics) DefaultPort() int {
-	return 42002
+// Port returns bind port.
+func (m Metrics) Port() int {
+	return m.port
 }
 
-// Args is a list of additional arguments passed to exporter executable.
-func (m Metrics) Args() []string {
-	var defaultArgs = []string{
-		"-collect.auto_increment.columns=true",
-		"-collect.binlog_size=true",
-		"-collect.global_status=true",
-		"-collect.global_variables=true",
-		"-collect.info_schema.innodb_metrics=true",
-		"-collect.info_schema.innodb_cmp=true",
-		"-collect.info_schema.innodb_cmpmem=true",
-		"-collect.info_schema.processlist=true",
-		"-collect.info_schema.query_response_time=true",
-		"-collect.info_schema.tables=true",
-		"-collect.info_schema.tablestats=true",
-		"-collect.info_schema.userstats=true",
-		"-collect.perf_schema.eventswaits=true",
-		"-collect.perf_schema.file_events=true",
-		"-collect.perf_schema.indexiowaits=true",
-		"-collect.perf_schema.tableiowaits=true",
-		"-collect.perf_schema.tablelocks=true",
-		"-collect.slave_status=true",
-		//"-collect.engine_innodb_status=true",
-		//"-collect.engine_tokudb_status=true",
-		//"-collect.info_schema.clientstats=true",
-		//"-collect.info_schema.innodb_tablespaces=true",
-		//"-collect.perf_schema.eventsstatements=true",
-	}
-
+// collectArgs is a list of additional collect arguments
+// that should be updated in config file
+func (m Metrics) collectArgs() []map[string]string {
 	// disableArgs is a list of optional ssm-admin args to disable mysqld_exporter args.
-	var disableArgs = map[string][]string{
+	var disableArgs = map[string]map[string]string{
 		"tablestats": {
-			"-collect.auto_increment.columns=",
-			"-collect.info_schema.tables=",
-			"-collect.info_schema.tablestats=",
-			"-collect.perf_schema.indexiowaits=",
-			"-collect.perf_schema.tableiowaits=",
-			"-collect.perf_schema.tablelocks=",
+			"auto_increment.columns":   "0",
+			"info_schema.tables":       "0",
+			"info_schema.tablestats":   "0",
+			"perf_schema.indexiowaits": "0",
+			"perf_schema.tableiowaits": "0",
+			"perf_schema.tablelocks":   "0",
 		},
-		"userstats":   {"-collect.info_schema.userstats="},
-		"binlogstats": {"-collect.binlog_size="},
-		"processlist": {"-collect.info_schema.processlist="},
+		"userstats":   {"info_schema.userstats": "0"},
+		"binlogstats": {"binlog_size": "0"},
+		"processlist": {"info_schema.processlist": "0"},
 	}
 
 	// Disable exporter options if set so.
-	args := defaultArgs
+	args := make([]map[string]string, 0)
 	for _, o := range m.optsToDisable {
-		for _, f := range disableArgs[o] {
-			for i, a := range defaultArgs {
-				if strings.HasPrefix(a, f) {
-					args[i] = fmt.Sprintf("%sfalse", f)
-					break
-				}
-			}
-		}
+		args = append(args, disableArgs[o])
 	}
 	return args
-}
-
-// Environment is a list of additional environment variables passed to exporter executable.
-func (m Metrics) Environment() []string {
-	return []string{
-		fmt.Sprintf("DATA_SOURCE_NAME=%s", m.dsn),
-	}
 }
 
 // Executable is a name of exporter executable under PMMBaseDir.
@@ -148,11 +157,6 @@ func (m Metrics) KV() map[string][]byte {
 // Cluster defines cluster name for the target.
 func (m Metrics) Cluster() string {
 	return ""
-}
-
-// Multiple returns true if exporter can be added multiple times.
-func (m Metrics) Multiple() bool {
-	return true
 }
 
 func optsToDisable(ctx context.Context, dsn string, flags Flags) ([]string, error) {

@@ -766,6 +766,14 @@
   version = "v1.5.0"
 
 [[projects]]
+  digest = "1:0c3ec21dd54edcb2e19c6bdbe82e9b65ee214565d1ae2db946f028efb00b8419"
+  name = "gopkg.in/ini.v1"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b2f570e5b5b844226bbefe6fb521d891f529a951"
+  version = "v1.67.0"
+
+[[projects]]
   branch = "v2"
   digest = "1:ea57d204e1049286ac958c1b0ea64f36e923adc10162e842fcd29483ccedb38c"
   name = "gopkg.in/mgo.v2"
@@ -818,6 +826,7 @@
     "github.com/stretchr/testify/assert",
     "golang.org/x/net/context",
     "gopkg.in/DATA-DOG/go-sqlmock.v1",
+    "gopkg.in/ini.v1",
     "gopkg.in/mgo.v2",
     "gopkg.in/yaml.v2",
   ]

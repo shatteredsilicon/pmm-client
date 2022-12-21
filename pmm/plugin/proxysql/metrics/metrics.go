@@ -4,28 +4,42 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"path"
+	"strconv"
+	"strings"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/shatteredsilicon/ssm-client/pmm/plugin"
 	"github.com/shatteredsilicon/ssm-client/pmm/utils"
+	"gopkg.in/ini.v1"
 )
 
 var _ plugin.Metrics = (*Metrics)(nil)
 
 // New returns *Metrics.
-func New(dsn string) *Metrics {
+func New(dsn, ssmBaseDir string) *Metrics {
 	return &Metrics{
-		dsn: dsn,
+		dsn:        dsn,
+		ssmBaseDir: ssmBaseDir,
 	}
 }
 
 // Metrics implements plugin.Metrics.
 type Metrics struct {
-	dsn string
+	ssmBaseDir string
+	dsn        string
+	port       int
 }
 
 // Init initializes plugin.
-func (m *Metrics) Init(ctx context.Context, pmmUserPassword string) (*plugin.Info, error) {
+func (m *Metrics) Init(
+	ctx context.Context,
+	ssmUserPassword string,
+	bindAddress string,
+	authFile string,
+	sslKeyFile string,
+	sslCertFile string,
+) (*plugin.Info, error) {
 	dsn, err := mysql.ParseDSN(m.dsn)
 	if err != nil {
 		return nil, fmt.Errorf("Bad dsn %s: %s", m.dsn, err)
@@ -38,6 +52,32 @@ func (m *Metrics) Init(ctx context.Context, pmmUserPassword string) (*plugin.Inf
 	info := &plugin.Info{
 		DSN: m.dsn,
 	}
+
+	cfgPath := path.Join(m.ssmBaseDir, "proxysql_exporter.conf")
+	cfgFile, err := ini.Load(cfgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	parts := strings.Split(cfgFile.Section("web").Key("listen-address").Value(), ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid configuration for web.listen-address")
+	}
+	port, err := strconv.ParseInt(parts[1], 10, 32)
+	if err != nil || port <= 0 {
+		return nil, fmt.Errorf("invalid configuration for web.listen-address")
+	}
+	m.port = int(port)
+
+	cfgFile.Section("").Key("dsn").SetValue(m.dsn)
+	cfgFile.Section("web").Key("listen-address").SetValue(fmt.Sprintf("%s:%d", bindAddress, port))
+	cfgFile.Section("web").Key("ssl-key-file").SetValue(sslKeyFile)
+	cfgFile.Section("web").Key("ssl-cert-file").SetValue(sslCertFile)
+	err = cfgFile.SaveTo(cfgPath)
+	if err != nil {
+		return nil, err
+	}
+
 	return info, nil
 }
 
@@ -46,21 +86,9 @@ func (Metrics) Name() string {
 	return plugin.NameProxySQL
 }
 
-// DefaultPort returns default port.
-func (Metrics) DefaultPort() int {
-	return 42004
-}
-
-// Args is a list of additional arguments passed to exporter executable.
-func (Metrics) Args() []string {
-	return nil
-}
-
-// Environment is a list of additional environment variables passed to exporter executable.
-func (m Metrics) Environment() []string {
-	return []string{
-		fmt.Sprintf("DATA_SOURCE_NAME=%s", m.dsn),
-	}
+// Port returns default port.
+func (m Metrics) Port() int {
+	return m.port
 }
 
 // Executable is a name of exporter executable under PMMBaseDir.
@@ -78,11 +106,6 @@ func (m Metrics) KV() map[string][]byte {
 // Cluster defines cluster name for the target.
 func (Metrics) Cluster() string {
 	return ""
-}
-
-// Multiple returns true if exporter can be added multiple times.
-func (Metrics) Multiple() bool {
-	return true
 }
 
 func testConnection(ctx context.Context, dsn string) error {
