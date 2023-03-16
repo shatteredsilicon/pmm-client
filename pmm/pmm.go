@@ -878,3 +878,34 @@ func isValidSvcType(svcType string) error {
 
 Service type takes the following values: %s.`, strings.Join(svcTypes, ", "))
 }
+
+func (a *Admin) remoteInstanceExists(ctx context.Context, instanceType, instanceName string) (bool, error) {
+	var res *managed.RemoteListResponse
+	var err error
+
+	if instanceType == plugin.NameMySQL {
+		res, err = a.managedAPI.MySQLList(ctx)
+	} else if instanceType == plugin.NamePostgreSQL {
+		res, err = a.managedAPI.PostgreSQLList(ctx)
+	} else {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	if res != nil && res.Instances != nil {
+		for _, instance := range res.Instances {
+			if instance.Node == nil {
+				continue
+			}
+
+			if instance.Node.Name == instanceName {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}

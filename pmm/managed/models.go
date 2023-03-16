@@ -146,3 +146,27 @@ type APIAnnotationCreateRequest struct {
 type VersionResponse struct {
 	Version string
 }
+
+// RemoteNode remote instance node response
+type RemoteNode struct {
+	Name string `json:"name,omitempty"`
+}
+
+// RemoteService remote instance service response
+type RemoteService struct {
+	Address       string `json:"address,omitempty"`
+	Port          uint32 `json:"port,omitempty"`
+	Engine        string `json:"engine,omitempty"`
+	EngineVersion string `json:"engine_version,omitempty"`
+}
+
+// RemoteInstance remote instance response
+type RemoteInstance struct {
+	Node    *RemoteNode    `json:"node,omitempty"`
+	Service *RemoteService `json:"service,omitempty"`
+}
+
+// RemoteListResponse remote instance list api response
+type RemoteListResponse struct {
+	Instances []*RemoteInstance `json:"instances,omitempty"`
+}

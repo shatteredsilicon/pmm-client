@@ -186,3 +186,21 @@ func (c *Client) VersionGet(ctx context.Context) (*VersionResponse, error) {
 func (c *Client) DeleteNode(ctx context.Context, nodeName string) error {
 	return c.do(ctx, "DELETE", "/v0/nodes/"+nodeName, nil, nil)
 }
+
+// MySQLList calls mysql list api
+func (c *Client) MySQLList(ctx context.Context) (*RemoteListResponse, error) {
+	res := new(RemoteListResponse)
+	if err := c.do(ctx, "GET", "/v0/mysql", nil, res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// PostgreSQLList calls postgresql list api
+func (c *Client) PostgreSQLList(ctx context.Context) (*RemoteListResponse, error) {
+	res := new(RemoteListResponse)
+	if err := c.do(ctx, "GET", "/v0/postgresql", nil, res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}

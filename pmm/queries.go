@@ -67,6 +67,14 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 		return nil, err
 	}
 
+	remoteInstanceExists, err := a.remoteInstanceExists(ctx, q.InstanceTypeName(), a.ServiceName)
+	if err != nil {
+		return nil, err
+	}
+	if remoteInstanceExists {
+		return nil, fmt.Errorf("an %s instance with name %s is already added to Query Analytics on server side.", q.InstanceTypeName(), a.ServiceName)
+	}
+
 	// Now check if there are any existing services of given service type.
 	consulSvc, err = a.getConsulService(serviceType, "")
 	if err != nil {
@@ -303,38 +311,6 @@ func (a *Admin) getInstance(subsystem, name, parentUUID string) (proto.Instance,
 	// Ensure this is the right instance.
 	// QAN API 1.0.4 didn't support filtering on parent_uuid, thus returning first record found.
 	if in.ParentUUID != parentUUID {
-		return in, errNoInstance
-	}
-
-	// Instance exists, let's undelete it.
-	in.Deleted = time.Unix(1, 0)
-	cmdBytes, _ := json.Marshal(in)
-	url = a.qanAPI.URL(a.serverURL, qanAPIBasePath, "instances", in.UUID)
-	resp, content, err := a.qanAPI.Put(url, cmdBytes)
-	if err != nil {
-		return in, err
-	}
-	if resp.StatusCode != http.StatusNoContent {
-		return in, a.qanAPI.Error("PUT", url, resp.StatusCode, http.StatusNoContent, content)
-
-	}
-
-	// Ensure it was undeleted.
-	// QAN API 1.0.4 didn't support changing "deleted" field.
-	url = a.qanAPI.URL(a.serverURL, qanAPIBasePath, "instances", in.UUID)
-	resp, bytes, err = a.qanAPI.Get(url)
-	if err != nil {
-		return in, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return in, a.qanAPI.Error("GET", url, resp.StatusCode, http.StatusOK, bytes)
-	}
-
-	if err := json.Unmarshal(bytes, &in); err != nil {
-		return in, err
-	}
-	// If it's not "1970-01-01 00:00:00 +0000 UTC", it was left deleted.
-	if in.Deleted.Year() != 1970 {
 		return in, errNoInstance
 	}
 
