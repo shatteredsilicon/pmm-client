@@ -887,6 +887,8 @@ func (a *Admin) remoteInstanceExists(ctx context.Context, instanceType, instance
 		res, err = a.managedAPI.MySQLList(ctx)
 	} else if instanceType == plugin.NamePostgreSQL {
 		res, err = a.managedAPI.PostgreSQLList(ctx)
+	} else if instanceType == plugin.NameLinux {
+		res, err = a.managedAPI.SNMPList(ctx)
 	} else {
 		return false, nil
 	}

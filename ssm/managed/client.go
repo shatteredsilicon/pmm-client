@@ -204,3 +204,12 @@ func (c *Client) PostgreSQLList(ctx context.Context) (*RemoteListResponse, error
 	}
 	return res, nil
 }
+
+// SNMPList calls snmp list api
+func (c *Client) SNMPList(ctx context.Context) (*RemoteListResponse, error) {
+	res := new(RemoteListResponse)
+	if err := c.do(ctx, "GET", "/v0/snmp", nil, res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
