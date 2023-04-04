@@ -7,6 +7,9 @@ Build-Depends: debhelper (>= 9), golang-1.17
 Homepage: https://shatteredsilicon.net
 
 Package: ssm-client
+Provides: pmm-client (= 1.17.6)
+Replaces: pmm-client (<< 1.17.6-1)
+Conflicts: pmm-client (>= 1.17.6-1)
 Architecture: amd64 arm64
 Description: Shattered Silicon Monitoring Client
  Shattered Silicon Monitoring (SSM) is an open-source platform for managing and monitoring MySQL and MongoDB

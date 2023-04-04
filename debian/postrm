@@ -3,7 +3,7 @@
 if [ "$1" = "remove" ]; then
     rm -rf /opt/ss/ssm-client
     rm -rf /opt/ss/qan-agent
-    rm -f /lib/systemd/system/ssm-*
+    rm -f /etc/systemd/system/ssm-*
     rm -f /etc/init.d/ssm-*
     rm -f /etc/init/ssm-*
     echo "Uninstall complete."

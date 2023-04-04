@@ -2,12 +2,51 @@
 
 # check init system
 if [ -d "/run/systemd/system" ]; then
-    mv /opt/ss/ssm-client/systemd/* /lib/systemd/system/
-    rm -rf /opt/ss/ssm-client/init.d /opt/ss/ssm-client/init /opt/ss/ssm-client/systemd
+    for file in /opt/ss/ssm-client/systemd/*; do
+        if ! [ -f "/etc/systemd/system/$(basename ${file})" ]; then
+            mv "${file}" /etc/systemd/system/
+        fi
+    done
 elif [ -f "/sbin/upstart-udev-bridge" ] || ([ -f "/sbin/init" ] && [ "$(/sbin/init --version)" == "init (upstart"* ]); then
-    mv /opt/ss/ssm-client/init/* /etc/init/
-    rm -rf /opt/ss/ssm-client/init.d /opt/ss/ssm-client/init /opt/ss/ssm-client/systemd
+    for file in /opt/ss/ssm-client/init/*; do
+        if ! [ -f "/etc/init/$(basename ${file})" ]; then
+            mv "${file}" /etc/init/
+        fi
+    done
 else
-    mv /opt/ss/ssm-client/init.d/* /etc/init.d/
-    rm -rf /opt/ss/ssm-client/init.d /opt/ss/ssm-client/init /opt/ss/ssm-client/systemd
+    for file in /opt/ss/ssm-client/init.d/*; do
+        if ! [ -f "/etc/init.d/$(basename ${file})" ]; then
+            mv "${file}" /etc/init.d/
+        fi
+    done
 fi
+rm -rf /opt/ss/ssm-client/{systemd,init.d,init}
+
+# copy conf files
+for file in /opt/ss/ssm-client/config/*; do
+    if ! [ -f "/opt/ss/ssm-client/$(basename ${file})" ]; then
+        mv "${file}" /opt/ss/ssm-client/
+    fi
+done
+rm -rf /opt/ss/ssm-client/config
+
+# upgrade
+if [ "$1" == "configure" ]; then
+    # Upgrade from PMM
+    if [ -f /opt/ss/percona/pmm-client/pmm.yml ]; then
+        cp /opt/ss/percona/pmm-client/pmm.yml /opt/ss/ssm-client/ssm.yml
+    fi
+    if [ -f /opt/ss/percona/pmm-client/server.crt ]; then
+        cp /opt/ss/percona/pmm-client/server.crt /opt/ss/ssm-client/server.crt
+    fi
+    if [ -f /opt/ss/percona/pmm-client/server.key ]; then
+        cp /opt/ss/percona/pmm-client/server.key /opt/ss/ssm-client/server.key
+    fi
+    if [ -d /opt/ss/percona/qan-agent ]; then
+        find /opt/ss/percona/qan-agent -maxdepth 1 ! -name bin -exec cp -r "{}" /opt/ss/ssm-client/qan-agent/ \;
+    fi
+
+    ssm-admin upgrade
+fi
+
+rm -rf /opt/ss/percona

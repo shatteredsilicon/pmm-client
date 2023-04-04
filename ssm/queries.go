@@ -139,7 +139,7 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 	}
 
 	// Ensure qan-agent is started if service exists, otherwise it won't be enabled for QAN.
-	if err := startService(fmt.Sprintf("ssm-%s-queries", q.Name())); err != nil {
+	if err := startService(serviceName(serviceType)); err != nil {
 		return nil, err
 	}
 

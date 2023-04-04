@@ -40,6 +40,7 @@ var (
 	// to set root filesystem for ssm-admin
 	RootDir = ""
 
+	PMMBaseDir   = "/usr/local/percona/pmm-client"
 	SSMBaseDir   = RootDir + "/opt/ss/ssm-client"
 	AgentBaseDir = RootDir + "/opt/ss/qan-agent"
 

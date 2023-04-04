@@ -128,14 +128,6 @@ var (
 				"show-passwords":
 				// above cmds should work w/o connectivity, so we return before admin.SetAPI()
 				return
-			case
-				"start",
-				"stop",
-				"restart":
-				if flagAll {
-					// above cmds should work w/o connectivity if flagAll is set
-					return
-				}
 			}
 
 			// Set APIs and check if server is alive.
@@ -144,8 +136,8 @@ var (
 				os.Exit(1)
 			}
 
-			// Proceed to "ssm-admin repair" if requested.
-			if cmd.Name() == "repair" {
+			// Proceed to "ssm-admin repair" or "ssm-admin upgrade" if requested.
+			if cmd.Name() == "repair" || cmd.Name() == "upgrade" {
 				return
 			}
 
@@ -160,7 +152,15 @@ var (
 			}
 
 			// Check for broken installation.
-			orphanedServices, missingServices := admin.CheckInstallation()
+			hasV1Services, orphanedServices, missingServices := admin.CheckInstallation()
+			if hasV1Services {
+				fmt.Println(`We have found left over v1 system services.
+Usually, this happens when the upgrade process during the installation fails.
+
+To continue, run 'ssm-admin upgrade' to upgrade services.
+`, strings.Join(orphanedServices, ", "))
+				os.Exit(1)
+			}
 			if len(orphanedServices) > 0 {
 				fmt.Printf(`We have found system services disconnected from SSM server.
 Usually, this happens when data container is wiped before all monitoring services are removed or client is uninstalled.
@@ -1435,6 +1435,22 @@ despite SSM server is alive or not.
 		},
 	}
 
+	cmdUpgrade = &cobra.Command{
+		Use:   "upgrade",
+		Short: "Upgrade local monitoring services with the best effort.",
+		Long: `This command upgrades local monitoring service with the best effort.
+
+Usually, it runs automatically when ssm-client package is upgraded to upgrade local monitoring services
+		`,
+		Run: func(cmd *cobra.Command, args []string) {
+			err := admin.Upgrade()
+			if err != nil {
+				fmt.Printf("failed to upgrade local services: %+v\n", err)
+			}
+			os.Exit(0)
+		},
+	}
+
 	flagMongoURI, flagCluster, flagDSN, flagFormat string
 	flagATags                                      string
 
@@ -1474,6 +1490,7 @@ func main() {
 		cmdRepair,
 		cmdUninstall,
 		cmdSummary,
+		cmdUpgrade,
 	)
 	cmdAdd.AddCommand(
 		cmdAddLinuxMetrics,

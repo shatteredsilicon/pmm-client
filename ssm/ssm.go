@@ -27,11 +27,14 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io/fs"
 	"math/big"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -47,6 +50,7 @@ import (
 
 	"github.com/shatteredsilicon/ssm-client/ssm/managed"
 	"github.com/shatteredsilicon/ssm-client/ssm/plugin"
+	"gopkg.in/ini.v1"
 )
 
 // Admin main class.
@@ -280,7 +284,11 @@ func (a *Admin) StartStopMonitoring(action, svcType string) (affected bool, err 
 		return false, ErrNoService
 	}
 
-	svcName := fmt.Sprintf("ssm-%s", strings.Replace(svcType, ":", "-", 1))
+	var svcName string
+	services := GetLocalServices(svcType)
+	if len(services) > 0 {
+		svcName = services[0].serviceName
+	}
 	switch action {
 	case "start":
 		if getServiceStatus(svcName) {
@@ -317,9 +325,9 @@ func (a *Admin) StartStopAllMonitoring(action string) (numOfAffected, numOfAll i
 	localServices := GetLocalServices()
 	numOfAll = len(localServices)
 
-	for _, svcName := range localServices {
+	for _, svc := range localServices {
 		// only operate in-sync services
-		consulSvc, err := a.getConsulService(strings.Replace(strings.TrimLeft(svcName, "ssm-"), "-", ":", 1), "")
+		consulSvc, err := a.getConsulService(svc.serviceType, a.ServiceName)
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -330,29 +338,29 @@ func (a *Admin) StartStopAllMonitoring(action string) (numOfAffected, numOfAll i
 
 		switch action {
 		case "start":
-			if getServiceStatus(svcName) {
+			if getServiceStatus(svc.serviceName) {
 				// if it's already started then continue
 				continue
 			}
-			if err := startService(svcName); err != nil {
+			if err := startService(svc.serviceName); err != nil {
 				errs = append(errs, err)
 				continue
 			}
 		case "stop":
-			if !getServiceStatus(svcName) {
+			if !getServiceStatus(svc.serviceName) {
 				// if it's already stopped then continue
 				continue
 			}
-			if err := stopService(svcName); err != nil {
+			if err := stopService(svc.serviceName); err != nil {
 				errs = append(errs, err)
 				continue
 			}
 		case "restart":
-			if err := stopService(svcName); err != nil {
+			if err := stopService(svc.serviceName); err != nil {
 				errs = append(errs, err)
 				continue
 			}
-			if err := startService(svcName); err != nil {
+			if err := startService(svc.serviceName); err != nil {
 				errs = append(errs, err)
 				continue
 			}
@@ -382,31 +390,31 @@ func (a *Admin) RemoveAllMonitoring(ignoreErrors bool) (uint16, error) {
 			}
 			a.ServiceName = tag[6:]
 			switch svc.Service {
-			case "linux:metrics":
+			case plugin.LinuxMetrics:
 				if err := a.RemoveMetrics(plugin.NameLinux); err != nil && !ignoreErrors {
 					return count, err
 				}
-			case "mysql:metrics":
+			case plugin.MySQLMetrics:
 				if err := a.RemoveMetrics(plugin.NameMySQL); err != nil && !ignoreErrors {
 					return count, err
 				}
-			case "mysql:queries":
+			case plugin.MySQLQueries:
 				if err := a.RemoveQueries(plugin.NameMySQL); err != nil && !ignoreErrors {
 					return count, err
 				}
-			case "mongodb:metrics":
+			case plugin.MongoDBMetrics:
 				if err := a.RemoveMetrics(plugin.NameMongoDB); err != nil && !ignoreErrors {
 					return count, err
 				}
-			case "mongodb:queries":
+			case plugin.MongoDBQueries:
 				if err := a.RemoveQueries(plugin.NameMongoDB); err != nil && !ignoreErrors {
 					return count, err
 				}
-			case "postgresql:metrics":
+			case plugin.PostgreSQLMetrics:
 				if err := a.RemoveMetrics(plugin.NamePostgreSQL); err != nil && !ignoreErrors {
 					return count, err
 				}
-			case "proxysql:metrics":
+			case plugin.ProxySQLMetrics:
 				if err := a.RemoveMetrics(plugin.NameProxySQL); err != nil && !ignoreErrors {
 					return count, err
 				}
@@ -424,7 +432,7 @@ func (a *Admin) RemoveAllMonitoring(ignoreErrors bool) (uint16, error) {
 
 // PurgeMetrics purge metrics data on the server by its metric type and name.
 func (a *Admin) PurgeMetrics(svcType string) error {
-	if svcType != "linux:metrics" && svcType != "mysql:metrics" && svcType != "mongodb:metrics" && svcType != "proxysql:metrics" && svcType != "postgresql:metrics" {
+	if isValidSvcType(svcType) != nil || !strings.HasSuffix(svcType, plugin.TypeMetrics) {
 		return errors.New(`bad service type.
 
 Service type takes the following values: linux:metrics, mysql:metrics, mongodb:metrics, proxysql:metrics, postgresql:metrics.`)
@@ -568,44 +576,60 @@ func (a *Admin) CheckVersion(ctx context.Context) (fatal bool, err error) {
 }
 
 // CheckInstallation check for broken installation.
-func (a *Admin) CheckInstallation() (orphanedServices, missingServices []string) {
+func (a *Admin) CheckInstallation() (hasV1Services bool, orphanedServices, missingServices []string) {
+	localServices := GetLocalServices()
 	activeServices := GetLocalActiveServices()
+
+	for _, svc := range localServices {
+		if svc.isV1Service() {
+			hasV1Services = true
+			break
+		}
+	}
 
 	node, _, err := a.consulAPI.Catalog().Node(a.Config.ClientName, nil)
 	if err != nil || node == nil || len(node.Services) == 0 {
-		return activeServices, []string{}
+		for _, svc := range activeServices {
+			orphanedServices = append(orphanedServices, svc.serviceName)
+		}
+		return
 	}
 
 	// Find orphaned services: local system services that are not associated with Consul services.
 ForLoop1:
 	for _, s := range activeServices {
 		for _, svc := range node.Services {
-			svcName := fmt.Sprintf("ssm-%s", strings.Replace(svc.Service, ":", "-", 1))
-			if s == svcName {
+			if s.serviceType == svc.Service {
 				continue ForLoop1
 			}
 		}
-		orphanedServices = append(orphanedServices, s)
+		orphanedServices = append(orphanedServices, s.serviceName)
 	}
 
 	// Find missing services: Consul services that are missing locally.
 ForLoop2:
 	for _, svc := range node.Services {
-		svcName := fmt.Sprintf("ssm-%s", strings.Replace(svc.Service, ":", "-", 1))
-		for _, s := range activeServices {
-			if s == svcName {
+		for _, s := range localServices {
+			if svc.Service == s.serviceType {
 				continue ForLoop2
 			}
 		}
 		missingServices = append(missingServices, svc.ID)
 	}
 
-	return orphanedServices, missingServices
+	return hasV1Services, orphanedServices, missingServices
 }
 
 // RepairInstallation repair installation.
 func (a *Admin) RepairInstallation() error {
-	orphanedServices, missingServices := a.CheckInstallation()
+	hasV1Services, orphanedServices, missingServices := a.CheckInstallation()
+	if hasV1Services {
+		if err := a.Upgrade(); err != nil {
+			return err
+		}
+		_, orphanedServices, missingServices = a.CheckInstallation()
+	}
+
 	// stop local services.
 	for _, s := range orphanedServices {
 		if err := stopService(s); err != nil {
@@ -670,7 +694,7 @@ func (a *Admin) Uninstall() (count uint16, clientErr, serverErr error) {
 	localServices := GetLocalActiveServices()
 
 	for _, service := range localServices {
-		if err := stopService(service); err == nil {
+		if err := stopService(service.serviceName); err == nil {
 			count++
 		}
 	}
@@ -711,27 +735,84 @@ func (a *Admin) Uninstall() (count uint16, clientErr, serverErr error) {
 	return
 }
 
-// GetLocalServices finds any local SSM services
-func GetLocalServices() (services []string) {
+type localService struct {
+	serviceType string
+	serviceName string
+	filePath    string
+}
+
+func (svc localService) isPMMService() bool {
+	return strings.HasPrefix(svc.serviceName, "pmm-")
+}
+
+func (svc localService) isV1Service() bool {
+	return strings.Count(svc.serviceName, "-") == 3
+}
+
+func (svc localService) isQueries() bool {
+	return strings.HasSuffix(svc.serviceType, ":queries")
+}
+
+func serviceTypeInName(serviceType string) string {
+	return strings.Replace(serviceType, ":", "-", 1)
+}
+
+// GetLocalServices finds any local SSM/PMM services
+// If v1 service files (those files with '-port' suffix) exists,
+// they have higher priority
+func GetLocalServices(serviceTypes ...string) (services []localService) {
 	dir, extension := GetServiceDirAndExtension()
 
-	filesFound, _ := filepath.Glob(fmt.Sprintf("%s/ssm-*%s", dir, extension))
-	rService, _ := regexp.Compile(fmt.Sprintf("%s/(ssm-.+)%s", dir, extension))
-	for _, f := range filesFound {
-		if data := rService.FindStringSubmatch(f); data != nil {
-			services = append(services, data[1])
+	serviceMap := make(map[string]localService)
+	serviceRegex := regexp.MustCompile(`^(ssm|pmm)-([^-]+-[^-]+)(-\d+)?$`)
+	filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
 		}
+
+		if path == dir {
+			return nil
+		}
+
+		if d.IsDir() {
+			return fs.SkipDir
+		}
+
+		if !strings.HasSuffix(d.Name(), extension) {
+			return nil
+		}
+
+		name := strings.TrimSuffix(d.Name(), extension)
+		parts := serviceRegex.FindStringSubmatch(name)
+		if parts == nil {
+			return nil
+		}
+
+		serviceType := strings.Replace(parts[2], "-", ":", 1)
+		if _, ok := serviceMap[serviceType]; !ok || parts[3] != "" {
+			serviceMap[serviceType] = localService{
+				serviceType: serviceType,
+				serviceName: name,
+				filePath:    path,
+			}
+		}
+
+		return nil
+	})
+
+	for _, svc := range serviceMap {
+		services = append(services, svc)
 	}
 
 	return services
 }
 
 // GetLocalActiveServices finds local active SSM services
-func GetLocalActiveServices() (services []string) {
+func GetLocalActiveServices() (services []localService) {
 	localServices := GetLocalServices()
-	for _, svcName := range localServices {
-		if getServiceStatus(svcName) {
-			services = append(services, svcName)
+	for _, svc := range localServices {
+		if getServiceStatus(svc.serviceName) {
+			services = append(services, svc)
 		}
 	}
 	return
@@ -740,18 +821,18 @@ func GetLocalActiveServices() (services []string) {
 // GetServiceDirAndExtension returns dir and extension used to create system service
 func GetServiceDirAndExtension() (dir, extension string) {
 	switch service.Platform() {
-	case "linux-systemd":
-		dir = "/lib/systemd/system"
-		extension = ".service"
-	case "linux-upstart":
-		dir = "/etc/init"
-		extension = ".conf"
-	case "unix-systemv":
-		dir = "/etc/init.d"
-		extension = ""
-	case "darwin-launchd":
-		dir = "/Library/LaunchDaemons"
-		extension = ".plist"
+	case systemdPlatform:
+		dir = systemdDir
+		extension = systemdExtension
+	case upstartPlatform:
+		dir = upstartDir
+		extension = upstartExtension
+	case systemvPlatform:
+		dir = systemvDir
+		extension = systemvExtension
+	case launchdPlatform:
+		dir = launchdDir
+		extension = launchdExtension
 	}
 
 	return RootDir + dir, extension
@@ -857,13 +938,13 @@ func generateSSLCertificate(host, certFile, keyFile string) error {
 }
 
 var svcTypes = []string{
-	"linux:metrics",
-	"mysql:metrics",
-	"mysql:queries",
-	"mongodb:metrics",
-	"mongodb:queries",
-	"proxysql:metrics",
-	"postgresql:metrics",
+	plugin.LinuxMetrics,
+	plugin.MySQLMetrics,
+	plugin.MySQLQueries,
+	plugin.MongoDBMetrics,
+	plugin.MongoDBQueries,
+	plugin.PostgreSQLMetrics,
+	plugin.ProxySQLMetrics,
 }
 
 // isValidSvcType checks if given service type is allowed
@@ -910,4 +991,198 @@ func (a *Admin) remoteInstanceExists(ctx context.Context, instanceType, instance
 	}
 
 	return false, nil
+}
+
+// Upgrade upgrades local services
+func (a *Admin) Upgrade() (err error) {
+	services := GetLocalServices()
+	for _, svc := range services {
+		if isValidSvcType(svc.serviceType) != nil || !svc.isV1Service() {
+			continue
+		}
+
+		svcName := serviceName(svc.serviceType)
+
+		if !svc.isQueries() {
+			switch service.Platform() {
+			case systemdPlatform:
+				err = a.reconfigureFromSytemd(svc)
+				if err != nil {
+					return err
+				}
+			case systemvPlatform:
+				err = a.reconfigureFromSystemv(svc)
+				if err != nil {
+					return err
+				}
+			case upstartPlatform:
+				err = a.reconfigureFromUpstart(svc)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		isRunning := getServiceStatus(svc.serviceName)
+		if svc.isV1Service() {
+			if err = uninstallService(svc.serviceName); err != nil {
+				return err
+			}
+		}
+
+		if !isRunning {
+			continue
+		}
+
+		if err = restartService(svcName); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *Admin) reconfigureFromSytemd(svc localService) error {
+	upgradeSvcName := upgradeServiceName(svc.serviceType)
+	upgradeSvcFilePath := path.Join(systemdDir, upgradeSvcName+systemdExtension)
+
+	err := exec.Command("cp", svc.filePath, upgradeSvcFilePath).Run()
+	if err != nil {
+		return err
+	}
+
+	unitFile, err := ini.ShadowLoad(upgradeSvcFilePath)
+	if err != nil {
+		return err
+	}
+
+	if !unitFile.HasSection("Service") {
+		return nil
+	}
+
+	err = unitFile.Section("Service").Key("Environment").AddShadow("ON_CONFIGURE=1")
+	if err != nil {
+		return err
+	}
+
+	unitFile.Section("Service").Key("Restart").SetValue("no")
+	if err = unitFile.SaveTo(upgradeSvcFilePath); err != nil {
+		return err
+	}
+
+	if err = a.replacePMMDir(svc, upgradeSvcFilePath); err != nil {
+		return err
+	}
+
+	err = restartService(upgradeSvcName)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < 100; i++ {
+		time.Sleep(50 * time.Millisecond)
+		if !getServiceStatus(upgradeSvcName) {
+			break
+		}
+	}
+
+	if err = uninstallService(upgradeSvcName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *Admin) reconfigureFromSystemv(svc localService) error {
+	upgradeSvcName := upgradeServiceName(svc.serviceType)
+	upgradeSvcFilePath := path.Join(systemvDir, upgradeSvcName+systemvExtension)
+
+	err := exec.Command("cp", svc.filePath, upgradeSvcFilePath).Run()
+	if err != nil {
+		return err
+	}
+
+	err = exec.Command("sed", "-i", "1 i export ON_CONFIGURE=1", upgradeSvcFilePath).Run()
+	if err != nil {
+		return err
+	}
+
+	if err = a.replacePMMDir(svc, upgradeSvcFilePath); err != nil {
+		return err
+	}
+
+	err = restartService(upgradeSvcName)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < 100; i++ {
+		time.Sleep(50 * time.Millisecond)
+		if !getServiceStatus(upgradeSvcName) {
+			break
+		}
+	}
+
+	if err = uninstallService(upgradeSvcName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *Admin) reconfigureFromUpstart(svc localService) error {
+	upgradeSvcName := upgradeServiceName(svc.serviceType)
+	upgradeSvcFilePath := path.Join(upstartDir, upgradeSvcName+upstartExtension)
+
+	err := exec.Command("cp", svc.filePath, upgradeSvcFilePath).Run()
+	if err != nil {
+		return err
+	}
+
+	err = exec.Command("sed", "-i", "1 i env ON_CONFIGURE=1", upgradeSvcFilePath).Run()
+	if err != nil {
+		return err
+	}
+
+	err = exec.Command("sed", "-i", "s/\\(start[[:space:]]+on[[:space:]]+stopped\\)/# \\1/g", upgradeSvcFilePath).Run()
+	if err != nil {
+		return err
+	}
+
+	if err = a.replacePMMDir(svc, upgradeSvcFilePath); err != nil {
+		return err
+	}
+
+	err = restartService(upgradeSvcName)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < 100; i++ {
+		time.Sleep(50 * time.Millisecond)
+		if !getServiceStatus(upgradeSvcName) {
+			break
+		}
+	}
+
+	if err = uninstallService(upgradeSvcName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *Admin) replacePMMDir(svc localService, serviceFilePath string) error {
+	if !svc.isPMMService() {
+		return nil
+	}
+	return exec.Command(
+		"sed",
+		"-i",
+		fmt.Sprintf("s/%s/%s/g",
+			strings.Replace(PMMBaseDir, "/", "\\/", -1),
+			strings.Replace(SSMBaseDir, "/", "\\/", -1),
+		),
+		serviceFilePath,
+	).Run()
 }
