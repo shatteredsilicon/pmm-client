@@ -139,7 +139,7 @@ func (m Metrics) collectArgs() []map[string]string {
 	return args
 }
 
-// Executable is a name of exporter executable under PMMBaseDir.
+// Executable is a name of exporter executable under SSMBaseDir.
 func (m Metrics) Executable() string {
 	return plugin.MySQLExporter
 }

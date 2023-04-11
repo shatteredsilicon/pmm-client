@@ -779,11 +779,11 @@ func FileExists(file string) bool {
 // CheckBinaries check if all SSM Client binaries are at their paths
 func CheckBinaries() string {
 	paths := []string{
-		fmt.Sprintf("%s/node_exporter", PMMBaseDir),
-		fmt.Sprintf("%s/mysqld_exporter", PMMBaseDir),
-		fmt.Sprintf("%s/mongodb_exporter", PMMBaseDir),
-		fmt.Sprintf("%s/proxysql_exporter", PMMBaseDir),
-		fmt.Sprintf("%s/postgres_exporter", PMMBaseDir),
+		fmt.Sprintf("%s/node_exporter", SSMBaseDir),
+		fmt.Sprintf("%s/mysqld_exporter", SSMBaseDir),
+		fmt.Sprintf("%s/mongodb_exporter", SSMBaseDir),
+		fmt.Sprintf("%s/proxysql_exporter", SSMBaseDir),
+		fmt.Sprintf("%s/postgres_exporter", SSMBaseDir),
 		fmt.Sprintf("%s/bin/ssm-qan-agent", AgentBaseDir),
 		fmt.Sprintf("%s/bin/ssm-qan-agent-installer", AgentBaseDir),
 	}
