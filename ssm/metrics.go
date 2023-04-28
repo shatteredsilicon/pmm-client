@@ -116,7 +116,7 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 		}
 	}
 
-	if err := startService(fmt.Sprintf("ssm-%s-metrics", m.Name())); err != nil {
+	if err := startService(serviceName(serviceType)); err != nil {
 		return nil, err
 	}
 

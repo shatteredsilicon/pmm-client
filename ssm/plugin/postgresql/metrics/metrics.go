@@ -87,7 +87,7 @@ func (m Metrics) Port() int {
 	return m.port
 }
 
-// Executable is a name of exporter executable under PMMBaseDir.
+// Executable is a name of exporter executable under SSMBaseDir.
 func (m Metrics) Executable() string {
 	return plugin.PostgreSQLExporter
 }

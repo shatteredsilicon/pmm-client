@@ -14,6 +14,9 @@ Source:         ssm-client-%{_version}.tar.gz
 AutoReq:        no
 BuildRequires:  glibc-devel, golang, unzip, gzip, make, perl-ExtUtils-MakeMaker, git, systemd
 
+Obsoletes: pmm-client <= 1.17.5
+Conflicts: pmm-client > 1.17.5
+
 Requires(post):     systemd
 Requires(preun):    systemd
 Requires(postun):   systemd
@@ -80,7 +83,7 @@ install -m 0755 %{_GOPATH}/bin/ssm-client $RPM_BUILD_ROOT/usr/sbin/pmm-admin
 install -m 0755 -d $RPM_BUILD_ROOT/opt/ss/ssm-client
 install -m 0755 -d $RPM_BUILD_ROOT/opt/ss/qan-agent/bin
 install -m 0755 -d $RPM_BUILD_ROOT/opt/ss/ssm-client/textfile-collector
-install -m 0755 -d $RPM_BUILD_ROOT/lib/systemd/system
+install -m 0755 -d $RPM_BUILD_ROOT/etc/systemd/system
 install -m 0755 -d $RPM_BUILD_ROOT/etc/rsyslog.d/
 install -m 0755 -d $RPM_BUILD_ROOT/etc/logrotate.d/
 install -m 0755 %{_GOPATH}/bin/node_exporter $RPM_BUILD_ROOT/opt/ss/ssm-client/
@@ -98,13 +101,8 @@ install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/suppo
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/support-files/config/mongodb_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter/support-files/config/postgres_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter/support-files/config/proxysql_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
-install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/ssm-linux-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-linux-metrics.service
-install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/ssm-mysql-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-mysql-metrics.service
-install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/ssm-mysql-queries.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-mysql-queries.service
-install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/ssm-mongodb-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-mongodb-metrics.service
-install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/ssm-mongodb-queries.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-mongodb-queries.service
-install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter/ssm-postgresql-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-postgresql-metrics.service
-install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter/ssm-proxysql-metrics.service $RPM_BUILD_ROOT/lib/systemd/system/ssm-proxysql-metrics.service
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/{node,mysqld,mongodb,postgres,proxysql}_exporter/ssm-*.service $RPM_BUILD_ROOT/etc/systemd/system/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/ssm-*.service $RPM_BUILD_ROOT/etc/systemd/system/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
@@ -122,6 +120,25 @@ install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/support-fil
 rm -rf $RPM_BUILD_ROOT
 
 %post
+# Upgrade
+if [ $1 -gt 1 ]; then
+    # Upgrade from PMM
+    if [ -f /usr/local/percona/pmm-client/pmm.yml ]; then
+        cp /usr/local/percona/pmm-client/pmm.yml /opt/ss/ssm-client/ssm.yml
+    fi
+    if [ -f /usr/local/percona/pmm-client/server.crt ]; then
+        cp /usr/local/percona/pmm-client/server.crt /opt/ss/ssm-client/server.crt
+    fi
+    if [ -f /usr/local/percona/pmm-client/server.key ]; then
+        cp /usr/local/percona/pmm-client/server.key /opt/ss/ssm-client/server.key
+    fi
+    if [ -d /usr/local/percona/qan-agent ]; then
+        find /usr/local/percona/qan-agent -maxdepth 1 ! -name bin -exec cp -r "{}" /opt/ss/ssm-client/qan-agent/ \;
+    fi
+
+    ssm-admin upgrade
+fi
+
 %systemd_post ssm-linux-metrics.service
 %systemd_post ssm-mysql-metrics.service
 %systemd_post ssm-mysql-queries.service
@@ -166,15 +183,10 @@ fi
 %dir /opt/ss/qan-agent/bin
 /opt/ss/ssm-client/textfile-collector/*
 /opt/ss/ssm-client/*
+%config /opt/ss/ssm-client/*.conf
 /opt/ss/qan-agent/bin/*
+%config /etc/systemd/system/ssm-*.service
 /usr/sbin/ssm-admin
 /usr/sbin/pmm-admin
-/lib/systemd/system/ssm-linux-metrics.service
-/lib/systemd/system/ssm-mysql-metrics.service
-/lib/systemd/system/ssm-mysql-queries.service
-/lib/systemd/system/ssm-mongodb-metrics.service
-/lib/systemd/system/ssm-mongodb-queries.service
-/lib/systemd/system/ssm-postgresql-metrics.service
-/lib/systemd/system/ssm-proxysql-metrics.service
-/etc/rsyslog.d/ssm-*.conf
-/etc/logrotate.d/ssm-*
+%config /etc/rsyslog.d/ssm-*.conf
+%config /etc/logrotate.d/ssm-*

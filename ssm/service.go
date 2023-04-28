@@ -18,6 +18,8 @@
 package ssm
 
 import (
+	"fmt"
+
 	service "github.com/percona/kardianos-service"
 )
 
@@ -131,6 +133,19 @@ func stopService(name string) error {
 	return nil
 }
 
+func restartService(name string) error {
+	prg := &program{}
+	svcConfig := &service.Config{Name: name}
+	svc, err := NewService(prg, svcConfig)
+	if err != nil {
+		return err
+	}
+	if err := svc.Restart(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func getServiceStatus(name string) bool {
 	prg := &program{}
 	svcConfig := &service.Config{Name: name}
@@ -142,4 +157,39 @@ func getServiceStatus(name string) bool {
 		return false
 	}
 	return true
+}
+
+const (
+	systemdPlatform = "linux-systemd"
+	upstartPlatform = "linux-upstart"
+	systemvPlatform = "unix-systemv"
+	launchdPlatform = "darwin-launchd"
+
+	systemdDir = "/etc/systemd/system"
+	upstartDir = "/etc/init"
+	systemvDir = "/etc/init.d"
+	launchdDir = "/Library/LaunchDaemons"
+
+	systemdExtension = ".service"
+	upstartExtension = ".conf"
+	systemvExtension = ""
+	launchdExtension = ".plist"
+
+	upgradeServiceSuffix = "-upgrade"
+)
+
+func serviceName(serviceType string) string {
+	if isValidSvcType(serviceType) != nil {
+		return ""
+	}
+
+	return fmt.Sprintf("ssm-%s", serviceTypeInName(serviceType))
+}
+
+func upgradeServiceName(serviceType string) string {
+	if name := serviceName(serviceType); name != "" {
+		return fmt.Sprintf("%s%s", name, upgradeServiceSuffix)
+	}
+
+	return ""
 }

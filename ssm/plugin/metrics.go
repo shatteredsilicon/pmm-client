@@ -18,7 +18,7 @@ type Metrics interface {
 	// Name of the exporter.
 	// As the time of writing this is limited to linux, mysql, mongodb, proxysql and postgresql.
 	Name() string
-	// Executable is a name of exporter executable under PMMBaseDir.
+	// Executable is a name of exporter executable under SSMBaseDir.
 	Executable() string
 	// KV is a list of additional Key-Value data stored in consul.
 	KV() map[string][]byte

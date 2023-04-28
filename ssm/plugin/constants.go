@@ -16,11 +16,23 @@ const (
 	MongoDBExporter    = "mongodb_exporter"
 	PostgreSQLExporter = "postgres_exporter"
 	ProxySQLExporter   = "proxysql_exporter"
-	QanAgent           = "qan-agent"
+	SSMQanAgent        = "ssm-qan-agent"
+	PMMQanAgent        = "pmm-qan-agent"
 )
 
 // Data types
 const (
 	TypeMetrics = "metrics"
 	TypeQueries = "queries"
+)
+
+// Service types
+const (
+	LinuxMetrics      = "linux:metrics"
+	MySQLMetrics      = "mysql:metrics"
+	MongoDBMetrics    = "mongodb:metrics"
+	PostgreSQLMetrics = "postgresql:metrics"
+	ProxySQLMetrics   = "proxysql:metrics"
+	MySQLQueries      = "mysql:queries"
+	MongoDBQueries    = "mongodb:queries"
 )

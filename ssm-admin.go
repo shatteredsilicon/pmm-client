@@ -128,14 +128,6 @@ var (
 				"show-passwords":
 				// above cmds should work w/o connectivity, so we return before admin.SetAPI()
 				return
-			case
-				"start",
-				"stop",
-				"restart":
-				if flagAll {
-					// above cmds should work w/o connectivity if flagAll is set
-					return
-				}
 			}
 
 			// Set APIs and check if server is alive.
@@ -144,8 +136,8 @@ var (
 				os.Exit(1)
 			}
 
-			// Proceed to "ssm-admin repair" if requested.
-			if cmd.Name() == "repair" {
+			// Proceed to "ssm-admin repair" or "ssm-admin upgrade" if requested.
+			if cmd.Name() == "repair" || cmd.Name() == "upgrade" {
 				return
 			}
 
@@ -160,7 +152,15 @@ var (
 			}
 
 			// Check for broken installation.
-			orphanedServices, missingServices := admin.CheckInstallation()
+			hasV1Services, orphanedServices, missingServices := admin.CheckInstallation()
+			if hasV1Services {
+				fmt.Println(`We have found left over v1 system services.
+Usually, this happens when the upgrade process during the installation fails.
+
+To continue, run 'ssm-admin upgrade' to upgrade services.
+`, strings.Join(orphanedServices, ", "))
+				os.Exit(1)
+			}
 			if len(orphanedServices) > 0 {
 				fmt.Printf(`We have found system services disconnected from SSM server.
 Usually, this happens when data container is wiped before all monitoring services are removed or client is uninstalled.
@@ -276,7 +276,7 @@ However, you can add another one with the different name just for testing purpos
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			linuxMetrics := linuxMetrics.New(ssm.PMMBaseDir)
+			linuxMetrics := linuxMetrics.New(ssm.SSMBaseDir)
 			if _, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL); err != nil {
 				fmt.Println("Error adding linux metrics:", err)
 				os.Exit(1)
@@ -318,7 +318,7 @@ Table statistics is automatically disabled when there are more than 10000 tables
 				os.Exit(1)
 			}
 
-			linuxMetrics := linuxMetrics.New(ssm.PMMBaseDir)
+			linuxMetrics := linuxMetrics.New(ssm.SSMBaseDir)
 			_, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[linux:metrics] OK, already monitoring this system.")
@@ -329,7 +329,7 @@ Table statistics is automatically disabled when there are more than 10000 tables
 				fmt.Println("[linux:metrics] OK, now monitoring this system.")
 			}
 
-			mysqlMetrics := mysqlMetrics.New(flagMySQLMetrics, flagMySQL, ssm.PMMBaseDir)
+			mysqlMetrics := mysqlMetrics.New(flagMySQLMetrics, flagMySQL, ssm.SSMBaseDir)
 			info, err := admin.AddMetrics(ctx, mysqlMetrics, false, flagDisableSSL)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[mysql:metrics] OK, already monitoring MySQL metrics.")
@@ -374,7 +374,7 @@ Table statistics is automatically disabled when there are more than 10000 tables
   ssm-admin add mysql:metrics -- --collect.perf_schema.eventsstatements
   ssm-admin add mysql:metrics -- --collect.perf_schema.eventswaits=false`,
 		Run: func(cmd *cobra.Command, args []string) {
-			mysqlMetrics := mysqlMetrics.New(flagMySQLMetrics, flagMySQL, ssm.PMMBaseDir)
+			mysqlMetrics := mysqlMetrics.New(flagMySQLMetrics, flagMySQL, ssm.SSMBaseDir)
 			info, err := admin.AddMetrics(ctx, mysqlMetrics, false, flagDisableSSL)
 			if err != nil {
 				fmt.Println("Error adding MySQL metrics:", err)
@@ -448,7 +448,7 @@ a new user 'pmm' automatically using the given (auto-detected) PostgreSQL creden
 				os.Exit(1)
 			}
 
-			linuxMetrics := linuxMetrics.New(ssm.PMMBaseDir)
+			linuxMetrics := linuxMetrics.New(ssm.SSMBaseDir)
 			_, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[linux:metrics] OK, already monitoring this system.")
@@ -459,7 +459,7 @@ a new user 'pmm' automatically using the given (auto-detected) PostgreSQL creden
 				fmt.Println("[linux:metrics] OK, now monitoring this system.")
 			}
 
-			postgresqlMetrics := postgresqlMetrics.New(flagPostgreSQL, ssm.PMMBaseDir)
+			postgresqlMetrics := postgresqlMetrics.New(flagPostgreSQL, ssm.SSMBaseDir)
 			info, err := admin.AddMetrics(ctx, postgresqlMetrics, false, flagDisableSSL)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[postgresql:metrics] OK, already monitoring PostgreSQL metrics.")
@@ -489,7 +489,7 @@ a new user 'pmm' automatically using the given (auto-detected) PostgreSQL creden
   ssm-admin add postgresql:metrics --user rdsuser --password abc123 --host my-rds.1234567890.us-east-1.rds.amazonaws.com my-rds
   ssm-admin add postgresql:metrics -- --extend.query-path /path/to/queries.yaml`,
 		Run: func(cmd *cobra.Command, args []string) {
-			postgresqlMetrics := postgresqlMetrics.New(flagPostgreSQL, ssm.PMMBaseDir)
+			postgresqlMetrics := postgresqlMetrics.New(flagPostgreSQL, ssm.SSMBaseDir)
 			info, err := admin.AddMetrics(ctx, postgresqlMetrics, false, flagDisableSSL)
 			if err != nil {
 				fmt.Println("Error adding PostgreSQL metrics:", err)
@@ -521,7 +521,7 @@ When adding a MongoDB instance, you may provide --uri if the default one does no
 				os.Exit(1)
 			}
 
-			linuxMetrics := linuxMetrics.New(ssm.PMMBaseDir)
+			linuxMetrics := linuxMetrics.New(ssm.SSMBaseDir)
 			_, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[linux:metrics]   OK, already monitoring this system.")
@@ -532,7 +532,7 @@ When adding a MongoDB instance, you may provide --uri if the default one does no
 				fmt.Println("[linux:metrics]   OK, now monitoring this system.")
 			}
 
-			mongodbMetrics := mongodbMetrics.New(flagMongoURI, admin.Args, flagCluster, ssm.PMMBaseDir)
+			mongodbMetrics := mongodbMetrics.New(flagMongoURI, admin.Args, flagCluster, ssm.SSMBaseDir)
 			info, err := admin.AddMetrics(ctx, mongodbMetrics, false, flagDisableSSL)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[mongodb:metrics] OK, already monitoring MongoDB metrics.")
@@ -543,7 +543,7 @@ When adding a MongoDB instance, you may provide --uri if the default one does no
 				fmt.Println("[mongodb:metrics] OK, now monitoring MongoDB metrics using URI", utils.SanitizeDSN(info.DSN))
 			}
 
-			mongodbQueries := mongodbQueries.New(flagQueries, flagMongoURI, admin.Args, ssm.PMMBaseDir)
+			mongodbQueries := mongodbQueries.New(flagQueries, flagMongoURI, admin.Args, ssm.SSMBaseDir)
 			info, err = admin.AddQueries(ctx, mongodbQueries)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[mongodb:queries] OK, already monitoring MongoDB queries.")
@@ -572,7 +572,7 @@ When adding a MongoDB instance, you may provide --uri if the default one does no
   ssm-admin add mongodb:metrics --cluster bare-metal
   ssm-admin add mongodb:metrics -- --mongodb.tls`,
 		Run: func(cmd *cobra.Command, args []string) {
-			mongodbMetrics := mongodbMetrics.New(flagMongoURI, admin.Args, flagCluster, ssm.PMMBaseDir)
+			mongodbMetrics := mongodbMetrics.New(flagMongoURI, admin.Args, flagCluster, ssm.SSMBaseDir)
 			info, err := admin.AddMetrics(ctx, mongodbMetrics, false, flagDisableSSL)
 			if err != nil {
 				fmt.Println("Error adding MongoDB metrics:", err)
@@ -601,7 +601,7 @@ Type ssm-admin add mongodb:queries --help to see all acceptable flags.
 				fmt.Printf(msg, strings.Join(admin.Args, ", "))
 				os.Exit(1)
 			}
-			mongodbQueries := mongodbQueries.New(flagQueries, flagMongoURI, admin.Args, ssm.PMMBaseDir)
+			mongodbQueries := mongodbQueries.New(flagQueries, flagMongoURI, admin.Args, ssm.SSMBaseDir)
 			info, err := admin.AddQueries(ctx, mongodbQueries)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("Error adding MongoDB queries:", err)
@@ -634,7 +634,7 @@ When adding a ProxySQL instance, you may provide --dsn if the default one does n
 				os.Exit(1)
 			}
 
-			linuxMetrics := linuxMetrics.New(ssm.PMMBaseDir)
+			linuxMetrics := linuxMetrics.New(ssm.SSMBaseDir)
 			_, err := admin.AddMetrics(ctx, linuxMetrics, flagForce, flagDisableSSL)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[linux:metrics] OK, already monitoring this system.")
@@ -645,7 +645,7 @@ When adding a ProxySQL instance, you may provide --dsn if the default one does n
 				fmt.Println("[linux:metrics] OK, now monitoring this system.")
 			}
 
-			proxysqlMetrics := proxysqlMetrics.New(flagDSN, ssm.PMMBaseDir)
+			proxysqlMetrics := proxysqlMetrics.New(flagDSN, ssm.SSMBaseDir)
 			info, err := admin.AddMetrics(ctx, proxysqlMetrics, false, flagDisableSSL)
 			if err != nil {
 				fmt.Println("Error adding proxysql metrics:", err)
@@ -663,7 +663,7 @@ When adding a ProxySQL instance, you may provide --dsn if the default one does n
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
 		`,
 		Run: func(cmd *cobra.Command, args []string) {
-			proxysqlMetrics := proxysqlMetrics.New(flagDSN, ssm.PMMBaseDir)
+			proxysqlMetrics := proxysqlMetrics.New(flagDSN, ssm.SSMBaseDir)
 			info, err := admin.AddMetrics(ctx, proxysqlMetrics, false, flagDisableSSL)
 			if err != nil {
 				fmt.Println("Error adding proxysql metrics:", err)
@@ -1435,6 +1435,22 @@ despite SSM server is alive or not.
 		},
 	}
 
+	cmdUpgrade = &cobra.Command{
+		Use:   "upgrade",
+		Short: "Upgrade local monitoring services with the best effort.",
+		Long: `This command upgrades local monitoring service with the best effort.
+
+Usually, it runs automatically when ssm-client package is upgraded to upgrade local monitoring services
+		`,
+		Run: func(cmd *cobra.Command, args []string) {
+			err := admin.Upgrade()
+			if err != nil {
+				fmt.Printf("failed to upgrade local services: %+v\n", err)
+			}
+			os.Exit(0)
+		},
+	}
+
 	flagMongoURI, flagCluster, flagDSN, flagFormat string
 	flagATags                                      string
 
@@ -1474,6 +1490,7 @@ func main() {
 		cmdRepair,
 		cmdUninstall,
 		cmdSummary,
+		cmdUpgrade,
 	)
 	cmdAdd.AddCommand(
 		cmdAddLinuxMetrics,

@@ -287,7 +287,7 @@ func testConfig(t *testing.T, data pmmAdminData) {
 		assert.Nil(t, err)
 	}()
 
-	os.MkdirAll(data.rootDir+ssm.PMMBaseDir, 0777)
+	os.MkdirAll(data.rootDir+ssm.SSMBaseDir, 0777)
 
 	// Create fake api server
 	fapi := fakeapi.New()
@@ -327,7 +327,7 @@ func testConfigVerbose(t *testing.T, data pmmAdminData) {
 		assert.Nil(t, err)
 	}()
 
-	os.MkdirAll(data.rootDir+ssm.PMMBaseDir, 0777)
+	os.MkdirAll(data.rootDir+ssm.SSMBaseDir, 0777)
 
 	// Create fake api server
 	fapi := fakeapi.New()
@@ -432,7 +432,7 @@ func testConfigVerboseServerNotAvailable(t *testing.T, data pmmAdminData) {
 		assert.Nil(t, err)
 	}()
 
-	os.MkdirAll(data.rootDir+ssm.PMMBaseDir, 0777)
+	os.MkdirAll(data.rootDir+ssm.SSMBaseDir, 0777)
 
 	cmd := exec.Command(
 		data.bin,
@@ -471,7 +471,7 @@ func testConfigServerHideCredentials(t *testing.T, data pmmAdminData) {
 		assert.NoError(t, err)
 	}()
 
-	err := os.MkdirAll(data.rootDir+ssm.PMMBaseDir, 0777)
+	err := os.MkdirAll(data.rootDir+ssm.SSMBaseDir, 0777)
 	assert.NoError(t, err)
 
 	cmd := exec.Command(
@@ -513,7 +513,7 @@ func testStartStopRestartAllWithNoServices(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+ssm.PMMBaseDir+"/ssm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+ssm.SSMBaseDir+"/ssm.yml", bytes, 0600)
 
 	services := []string{
 		"start",
@@ -569,7 +569,7 @@ func testListEmpty(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+ssm.PMMBaseDir+"/ssm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+ssm.SSMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// Test empty list
 	t.Run("list (empty)", func(t *testing.T) {
@@ -642,7 +642,7 @@ func testListNonEmpty(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+ssm.PMMBaseDir+"/ssm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+ssm.SSMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// create fake system service
 	{
@@ -842,7 +842,7 @@ func testStartStopRestart(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+ssm.PMMBaseDir+"/ssm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+ssm.SSMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// create fake system service
 	{
@@ -906,7 +906,7 @@ func testStartStopRestartAllWithServices(t *testing.T, data pmmAdminData) {
 		BindAddress:   "data",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+ssm.PMMBaseDir+"/ssm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+ssm.SSMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// create fake system services
 	numOfServices := 3
@@ -1002,7 +1002,7 @@ func testStartStopRestartNoServiceFound(t *testing.T, data pmmAdminData) {
 		BindAddress:   "localhost",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+ssm.PMMBaseDir+"/ssm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+ssm.SSMBaseDir+"/ssm.yml", bytes, 0600)
 	svcName := "mysql:queries"
 
 	t.Run("start", func(t *testing.T) {
@@ -1073,7 +1073,7 @@ func testCheckNetwork(t *testing.T, data pmmAdminData) {
 		BindAddress:   "localhost",
 	}
 	bytes, _ := yaml.Marshal(pmmConfig)
-	ioutil.WriteFile(data.rootDir+ssm.PMMBaseDir+"/ssm.yml", bytes, 0600)
+	ioutil.WriteFile(data.rootDir+ssm.SSMBaseDir+"/ssm.yml", bytes, 0600)
 
 	// Test the command
 	{
@@ -2478,7 +2478,7 @@ func assertRegexpLines(t *testing.T, rx string, str string, msgAndArgs ...interf
 
 func createFakeENV(t *testing.T, data pmmAdminData) {
 	dirs := []string{
-		filepath.Join(data.rootDir, ssm.PMMBaseDir),
+		filepath.Join(data.rootDir, ssm.SSMBaseDir),
 		filepath.Join(data.rootDir, ssm.AgentBaseDir, "bin"),
 		filepath.Join(data.rootDir, ssm.AgentBaseDir, "config"),
 		filepath.Join(data.rootDir, ssm.AgentBaseDir, "instance"),
@@ -2490,10 +2490,10 @@ func createFakeENV(t *testing.T, data pmmAdminData) {
 	}
 
 	files := []string{
-		filepath.Join(data.rootDir, ssm.PMMBaseDir, "node_exporter"),
-		filepath.Join(data.rootDir, ssm.PMMBaseDir, "mysqld_exporter"),
-		filepath.Join(data.rootDir, ssm.PMMBaseDir, "postgres_exporter"),
-		filepath.Join(data.rootDir, ssm.PMMBaseDir, "proxysql_exporter"),
+		filepath.Join(data.rootDir, ssm.SSMBaseDir, "node_exporter"),
+		filepath.Join(data.rootDir, ssm.SSMBaseDir, "mysqld_exporter"),
+		filepath.Join(data.rootDir, ssm.SSMBaseDir, "postgres_exporter"),
+		filepath.Join(data.rootDir, ssm.SSMBaseDir, "proxysql_exporter"),
 		filepath.Join(data.rootDir, ssm.AgentBaseDir, "bin", "ssm-qan-agent"),
 	}
 
@@ -2502,7 +2502,7 @@ func createFakeENV(t *testing.T, data pmmAdminData) {
 		assert.NoError(t, err)
 	}
 
-	f, err := os.Create(filepath.Join(data.rootDir, ssm.PMMBaseDir, "mongodb_exporter"))
+	f, err := os.Create(filepath.Join(data.rootDir, ssm.SSMBaseDir, "mongodb_exporter"))
 	assert.NoError(t, err)
 	fmt.Fprintln(f, `#!/bin/sh
 
@@ -2528,7 +2528,7 @@ cat << 'EOF'
 }
 EOF`)
 	f.Close()
-	err = os.Chmod(filepath.Join(data.rootDir, ssm.PMMBaseDir, "mongodb_exporter"), 0777)
+	err = os.Chmod(filepath.Join(data.rootDir, ssm.SSMBaseDir, "mongodb_exporter"), 0777)
 	assert.NoError(t, err)
 
 	f, err = os.Create(filepath.Join(data.rootDir, ssm.AgentBaseDir, "bin/ssm-qan-agent-installer"))
