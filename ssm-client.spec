@@ -12,7 +12,7 @@ Vendor:         Shattered Silicon
 URL:            https://shatteredsilicon.net
 Source:         ssm-client-%{_version}.tar.gz
 AutoReq:        no
-BuildRequires:  glibc-devel, golang, unzip, gzip, make, perl-ExtUtils-MakeMaker, git, systemd
+BuildRequires:  glibc-devel, glibc-static, golang, unzip, gzip, make, perl-ExtUtils-MakeMaker, git, systemd
 
 Obsoletes: pmm-client <= 1.17.5
 Conflicts: pmm-client > 1.17.5
