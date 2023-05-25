@@ -80,6 +80,7 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 	tags := []string{
 		fmt.Sprintf("alias_%s", a.ServiceName),
 		scheme,
+		fmt.Sprintf("region_client"),
 		fmt.Sprintf("distro_%s", info.Distro),
 		fmt.Sprintf("version_%s", info.Version),
 	}
