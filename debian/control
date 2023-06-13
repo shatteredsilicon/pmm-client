@@ -3,7 +3,6 @@ Section: utils
 Priority: optional
 Maintainer: Shattered Silicon
 Standards-Version: 4.6.2.0
-Version: %{_version}-1
 Build-Depends: debhelper (>= 9), golang-1.17
 Homepage: https://shatteredsilicon.net
 
