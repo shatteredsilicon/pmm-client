@@ -1,3 +1,7 @@
+ssm-client (%{_version}) unstable; urgency=medium
+
+  * Development release
+
 ssm-client (8.6.1.17.5.1-1) unstable; urgency=medium
 
   * Initial release
