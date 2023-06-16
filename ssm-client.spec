@@ -5,7 +5,7 @@
 Name:           ssm-client
 Summary:        Shattered Silicon Monitoring Client
 Version:        %{_version}
-Release:        1%{?dist}
+Release:        %{_release}
 Group:          Applications/Databases
 License:        AGPLv3
 Vendor:         Shattered Silicon
