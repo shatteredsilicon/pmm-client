@@ -37,6 +37,7 @@ mkdir -p %{_GOPATH}
 
 export GOPATH=%{_GOPATH}
 export GO111MODULE=off
+export CGO_ENABLED=0
 
 %{__mkdir_p} %{_GOPATH}/src/github.com/prometheus
 %{__mkdir_p} %{_GOPATH}/src/github.com/shatteredsilicon
