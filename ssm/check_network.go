@@ -183,7 +183,7 @@ func (a *Admin) CheckNetwork() error {
 		}
 
 		// Check protection status.
-		localStatus := getServiceStatus(fmt.Sprintf("ssm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port))
+		localStatus := getServiceStatus(fmt.Sprintf("ssm-%s-%d", strings.Replace(svc.Service, ":", "-", 1), svc.Port)) || getServiceStatus(serviceName(svc.Service))
 		sslVal := "-"
 		protectedVal := "-"
 		if localStatus {
