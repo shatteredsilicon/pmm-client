@@ -1369,7 +1369,7 @@ Verify that PostgreSQL user exists and has the correct privileges.
 Use additional flags --user, --password, --host, --port if needed.
 
 It looks like we were unable to connect to your PostgreSQL server.
-Please see the PMM FAQ for additional troubleshooting steps: https://www.percona.com/doc/percona-monitoring-and-management/faq.html
+Please see the SSM FAQ for additional troubleshooting steps: https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/faq.md
 `
 	assertRegexpLines(t, expected, string(output))
 }
@@ -2119,7 +2119,7 @@ func testAddMongoDB(t *testing.T, data pmmAdminData) {
 \[mongodb:queries\] OK, now monitoring MongoDB queries using URI 127.0.0.1:27017
 \[mongodb:queries\] It is required for correct operation that profiling of monitored MongoDB databases be enabled.
 \[mongodb:queries\] Note that profiling is not enabled by default because it may reduce the performance of your MongoDB server.
-\[mongodb:queries\] For more information read PMM documentation \(https://www.percona.com/doc/percona-monitoring-and-management/conf-mongodb.html\).
+\[mongodb:queries\] For more information read SSM documentation \(https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/conf-mongodb.md\).
 `
 	assertRegexpLines(t, expected, string(output))
 }
@@ -2372,7 +2372,7 @@ func testAddMongoDBQueries(t *testing.T, data pmmAdminData) {
 	expected := `OK, now monitoring MongoDB queries using URI 127.0.0.1:27017
 It is required for correct operation that profiling of monitored MongoDB databases be enabled.
 Note that profiling is not enabled by default because it may reduce the performance of your MongoDB server.
-For more information read PMM documentation \(https://www.percona.com/doc/percona-monitoring-and-management/conf-mongodb.html\).
+For more information read SSM documentation \(https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/conf-mongodb.md\).
 `
 	assertRegexpLines(t, expected, string(output))
 }

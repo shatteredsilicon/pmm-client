@@ -34,4 +34,4 @@
 
 [[override]]
   name = "github.com/shatteredsilicon/ssm"
-  revision = "b00aab5447e7f481eec150bc4fd6ba1137260b4f"
+  branch = "1.x"
