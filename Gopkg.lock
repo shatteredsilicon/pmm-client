@@ -10,12 +10,12 @@
   version = "v5.1.1"
 
 [[projects]]
-  digest = "1:af05bf8fd1b67aec0f66645636d7757570b96f58aaa020754b5daf56e84fccde"
+  digest = "1:d579a543cb73797ee2173a2422a76a1890127155cd70380c5e1bc0ac3811313f"
   name = "github.com/Masterminds/semver"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "7bb0c843b53d6ad21a3f619cb22c4b442bb3ef3e"
-  version = "v3.1.1"
+  revision = "4694ab0ad3c9477a17e347d828d2aca9ef7130f0"
+  version = "v3.2.0"
 
 [[projects]]
   digest = "1:a83cda17d4e230fb1f810f3f8d1e337d1ca71f68fbe0117e51a1723744aa6ec8"
@@ -540,15 +540,17 @@
   revision = "e2103e2c35297fb7e17febb81e49b312087a2372"
 
 [[projects]]
-  digest = "1:03dfdfc7c2f3080c8e558b7c24af1fa64fd85ff46067b30bcedfb0168f2f83a4"
+  branch = "1.x"
+  digest = "1:7447f1e116f895c169e6970811b7551c2b41113f5d91b0bc20bfeb4c1ad38eac"
   name = "github.com/shatteredsilicon/ssm"
   packages = [
     "proto",
     "proto/config",
+    "proto/query",
     "version",
   ]
   pruneopts = "NUT"
-  revision = "b00aab5447e7f481eec150bc4fd6ba1137260b4f"
+  revision = "700778e669eea59bb2fca19dfec2b1878499023a"
 
 [[projects]]
   digest = "1:75afc2cb6bb9e34e3ea2988450da1d6141df8cf3339aafa93b59947f10ce8106"

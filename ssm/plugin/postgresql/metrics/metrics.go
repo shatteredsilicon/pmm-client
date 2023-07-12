@@ -44,7 +44,7 @@ func (m *Metrics) Init(
 	if err != nil {
 		err = fmt.Errorf("%s\n\n"+
 			"It looks like we were unable to connect to your PostgreSQL server.\n"+
-			"Please see the PMM FAQ for additional troubleshooting steps: https://www.percona.com/doc/percona-monitoring-and-management/faq.html", err)
+			"Please see the SSM FAQ for additional troubleshooting steps: https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/faq.md", err)
 		return nil, err
 	}
 	m.dsn = info.DSN

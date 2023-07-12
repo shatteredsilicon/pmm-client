@@ -537,38 +537,19 @@ func (a *Admin) CheckVersion(ctx context.Context) (fatal bool, err error) {
 		return true, err
 	}
 
-	// Return fatal error if major versions do not match.
-	// Texts are slightly different, including anchors.
-	if serverVersion.Major < clientVersion.Major {
-		return true, fmt.Errorf(
-			"Error: You cannot run SSM Server %d.x with SSM Client %d.x.\n"+
-				"Please upgrade SSM Server by following the instructions at "+
-				"https://www.percona.com/doc/percona-monitoring-and-management/deploy/index.html#deploy-pmm-updating",
-			serverVersion.Major, clientVersion.Major,
-		)
-	}
-	if serverVersion.Major > clientVersion.Major {
-		return true, fmt.Errorf(
-			"Error: You cannot run SSM Server %d.x with SSM Client %d.x.\n"+
-				"Please upgrade SSM Client by following the instructions at "+
-				"https://www.percona.com/doc/percona-monitoring-and-management/deploy/index.html#updating",
-			serverVersion.Major, clientVersion.Major,
-		)
-	}
-
-	// Return warning if versions do not match.
-	if serverVersion.Less(&clientVersion) {
+	// Return warning error if versions do not match.
+	if serverVersion.String() < clientVersion.String() {
 		return false, fmt.Errorf(
 			"Warning: The recommended upgrade process is to upgrade SSM Server first, then SSM Clients.\n" +
-				"See Percona's instructions for upgrading at " +
-				"https://www.percona.com/doc/percona-monitoring-and-management/deploy/index.html#deploy-pmm-updating.",
+				"See Shattered Silicon's instructions for upgrading at " +
+				"https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/deploy/index.md#updating",
 		)
 	}
-	if clientVersion.Less(&serverVersion) {
+	if serverVersion.String() > clientVersion.String() {
 		return false, fmt.Errorf(
 			"Warning: It is recommended to use the same version on both SSM Server and Client, otherwise some features will not work correctly.\n" +
 				"Please upgrade your SSM Client by following the instructions from " +
-				"https://www.percona.com/doc/percona-monitoring-and-management/deploy/index.html#updating",
+				"https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/deploy/index.md#updating",
 		)
 	}
 

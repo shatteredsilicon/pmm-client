@@ -256,8 +256,8 @@ func (a *Admin) CollectSummary() error {
 		defer srcf.Close()
 		names, err := filepath.Glob(filepath.Join(logsDir, "ssm-*"))
 		if err != nil {
-			fmt.Printf("Getting list of  PMM logs in %s failed/n", logsDir)
-			summaryLogger.Println("No PMM logs were detected in", logsDir)
+			fmt.Printf("Getting list of  SSM logs in %s failed/n", logsDir)
+			summaryLogger.Println("No SSM logs were detected in", logsDir)
 		}
 		if len(names) > 0 {
 			for _, name := range names {
@@ -268,8 +268,8 @@ func (a *Admin) CollectSummary() error {
 				}
 			}
 		} else {
-			fmt.Println("No PMM logs were detected in", logsDir)
-			summaryLogger.Println("No PMM logs were detected in", logsDir)
+			fmt.Println("No SSM logs were detected in", logsDir)
+			summaryLogger.Println("No SSM logs were detected in", logsDir)
 		}
 	}
 
@@ -281,7 +281,7 @@ func (a *Admin) CollectSummary() error {
 		os.Exit(1)
 	}
 
-	fmt.Printf("\nData collection complete.  Please attach file %s to the issue as requested by Percona Support.\n", archFilename)
+	fmt.Printf("\nData collection complete.  Please attach file %s to the issue as requested by Shattered Silicon Support.\n", archFilename)
 
 	return nil
 }

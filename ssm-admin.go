@@ -554,7 +554,7 @@ When adding a MongoDB instance, you may provide --uri if the default one does no
 				fmt.Println("[mongodb:queries] OK, now monitoring MongoDB queries using URI", utils.SanitizeDSN(info.DSN))
 				fmt.Println("[mongodb:queries] It is required for correct operation that profiling of monitored MongoDB databases be enabled.")
 				fmt.Println("[mongodb:queries] Note that profiling is not enabled by default because it may reduce the performance of your MongoDB server.")
-				fmt.Println("[mongodb:queries] For more information read PMM documentation (https://www.percona.com/doc/percona-monitoring-and-management/conf-mongodb.html).")
+				fmt.Println("[mongodb:queries] For more information read SSM documentation (https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/conf-mongodb.md).")
 			}
 		},
 	}
@@ -610,7 +610,7 @@ Type ssm-admin add mongodb:queries --help to see all acceptable flags.
 			fmt.Println("OK, now monitoring MongoDB queries using URI", utils.SanitizeDSN(info.DSN))
 			fmt.Println("It is required for correct operation that profiling of monitored MongoDB databases be enabled.")
 			fmt.Println("Note that profiling is not enabled by default because it may reduce the performance of your MongoDB server.")
-			fmt.Println("For more information read PMM documentation (https://www.percona.com/doc/percona-monitoring-and-management/conf-mongodb.html).")
+			fmt.Println("For more information read SSM documentation (https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/conf-mongodb.md).")
 		},
 	}
 	cmdAddProxySQL = &cobra.Command{
