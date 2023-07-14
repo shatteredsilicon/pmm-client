@@ -121,6 +121,10 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 		return nil, err
 	}
 
+	if err := enableService(serviceName(serviceType)); err != nil {
+		return nil, err
+	}
+
 	return info, nil
 }
 
@@ -153,8 +157,11 @@ func (a *Admin) RemoveMetrics(name string) error {
 	}
 
 	// Stop and uninstall service.
-	serviceName := fmt.Sprintf("ssm-%s-metrics", name)
-	if err := stopService(serviceName); err != nil {
+	if err := stopService(serviceName(serviceType)); err != nil {
+		return err
+	}
+
+	if err := disableService(serviceName(serviceType)); err != nil {
 		return err
 	}
 

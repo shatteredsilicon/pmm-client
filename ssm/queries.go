@@ -143,6 +143,10 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 		return nil, err
 	}
 
+	if err := enableService(serviceName(serviceType)); err != nil {
+		return nil, err
+	}
+
 	// Start QAN by associating instance with agent.
 	qanConfig := q.Config()
 	qanConfig.UUID = instance.UUID
@@ -270,7 +274,11 @@ func (a *Admin) RemoveQueries(name string) error {
 		}
 
 		// Stop and uninstall service.
-		if err := stopService(fmt.Sprintf("ssm-%s-queries", name)); err != nil {
+		if err := stopService(serviceName(serviceType)); err != nil {
+			return err
+		}
+
+		if err := disableService(serviceName(serviceType)); err != nil {
 			return err
 		}
 	} else {

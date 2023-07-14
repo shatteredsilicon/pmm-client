@@ -19,6 +19,7 @@ package ssm
 
 import (
 	"fmt"
+	"os/exec"
 
 	service "github.com/percona/kardianos-service"
 )
@@ -144,6 +145,28 @@ func restartService(name string) error {
 		return err
 	}
 	return nil
+}
+
+func enableService(name string) error {
+	switch service.Platform() {
+	case systemdPlatform:
+		return exec.Command("systemctl", "enable", name).Run()
+	case systemvPlatform:
+		return exec.Command("update-rc.d", "-f", name, "defaults").Run()
+	default:
+		return nil
+	}
+}
+
+func disableService(name string) error {
+	switch service.Platform() {
+	case systemdPlatform:
+		return exec.Command("systemctl", "disable", name).Run()
+	case systemvPlatform:
+		return exec.Command("update-rc.d", "-f", name, "remove").Run()
+	default:
+		return nil
+	}
 }
 
 func getServiceStatus(name string) bool {
