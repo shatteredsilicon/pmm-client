@@ -746,7 +746,7 @@ func GetLocalServices(serviceTypes ...string) (services []localService) {
 
 	serviceMap := make(map[string]localService)
 	serviceRegex := regexp.MustCompile(`^(ssm|pmm)-([^-]+-[^-]+)(-\d+)?$`)
-	filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+	walkFunc := func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
@@ -779,7 +779,14 @@ func GetLocalServices(serviceTypes ...string) (services []localService) {
 		}
 
 		return nil
-	})
+	}
+	filepath.WalkDir(dir, walkFunc)
+
+	if service.Platform() == systemdPlatform {
+		// also get services from new systemd service dir
+		dir = newSystemdDir
+		filepath.WalkDir(dir, walkFunc)
+	}
 
 	for _, svc := range serviceMap {
 		services = append(services, svc)
@@ -816,7 +823,7 @@ func GetServiceDirAndExtension() (dir, extension string) {
 		extension = launchdExtension
 	}
 
-	return RootDir + dir, extension
+	return dir, extension
 }
 
 // ShowPasswords display passwords from config file.

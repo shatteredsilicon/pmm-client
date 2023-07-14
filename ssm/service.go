@@ -182,16 +182,19 @@ func getServiceStatus(name string) bool {
 	return true
 }
 
+var (
+	systemdDir    = RootDir + "/etc/systemd/system"
+	newSystemdDir = RootDir + "/lib/systemd/system"
+	upstartDir    = RootDir + "/etc/init"
+	systemvDir    = RootDir + "/etc/init.d"
+	launchdDir    = RootDir + "/Library/LaunchDaemons"
+)
+
 const (
 	systemdPlatform = "linux-systemd"
 	upstartPlatform = "linux-upstart"
 	systemvPlatform = "unix-systemv"
 	launchdPlatform = "darwin-launchd"
-
-	systemdDir = "/etc/systemd/system"
-	upstartDir = "/etc/init"
-	systemvDir = "/etc/init.d"
-	launchdDir = "/Library/LaunchDaemons"
 
 	systemdExtension = ".service"
 	upstartExtension = ".conf"
