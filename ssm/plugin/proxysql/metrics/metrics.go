@@ -71,6 +71,7 @@ func (m *Metrics) Init(
 
 	cfgFile.Section("").Key("dsn").SetValue(m.dsn)
 	cfgFile.Section("web").Key("listen-address").SetValue(fmt.Sprintf("%s:%d", bindAddress, port))
+	cfgFile.Section("web").Key("auth-file").SetValue(authFile)
 	cfgFile.Section("web").Key("ssl-key-file").SetValue(sslKeyFile)
 	cfgFile.Section("web").Key("ssl-cert-file").SetValue(sslCertFile)
 	err = cfgFile.SaveTo(cfgPath)

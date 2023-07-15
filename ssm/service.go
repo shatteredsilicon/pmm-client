@@ -19,6 +19,7 @@ package ssm
 
 import (
 	"fmt"
+	"os/exec"
 
 	service "github.com/percona/kardianos-service"
 )
@@ -146,6 +147,28 @@ func restartService(name string) error {
 	return nil
 }
 
+func enableService(name string) error {
+	switch service.Platform() {
+	case systemdPlatform:
+		return exec.Command("systemctl", "enable", name).Run()
+	case systemvPlatform:
+		return exec.Command("update-rc.d", "-f", name, "defaults").Run()
+	default:
+		return nil
+	}
+}
+
+func disableService(name string) error {
+	switch service.Platform() {
+	case systemdPlatform:
+		return exec.Command("systemctl", "disable", name).Run()
+	case systemvPlatform:
+		return exec.Command("update-rc.d", "-f", name, "remove").Run()
+	default:
+		return nil
+	}
+}
+
 func getServiceStatus(name string) bool {
 	prg := &program{}
 	svcConfig := &service.Config{Name: name}
@@ -159,16 +182,19 @@ func getServiceStatus(name string) bool {
 	return true
 }
 
+var (
+	systemdDir    = RootDir + "/etc/systemd/system"
+	newSystemdDir = RootDir + "/lib/systemd/system"
+	upstartDir    = RootDir + "/etc/init"
+	systemvDir    = RootDir + "/etc/init.d"
+	launchdDir    = RootDir + "/Library/LaunchDaemons"
+)
+
 const (
 	systemdPlatform = "linux-systemd"
 	upstartPlatform = "linux-upstart"
 	systemvPlatform = "unix-systemv"
 	launchdPlatform = "darwin-launchd"
-
-	systemdDir = "/etc/systemd/system"
-	upstartDir = "/etc/init"
-	systemvDir = "/etc/init.d"
-	launchdDir = "/Library/LaunchDaemons"
 
 	systemdExtension = ".service"
 	upstartExtension = ".conf"

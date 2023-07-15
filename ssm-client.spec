@@ -84,7 +84,7 @@ install -m 0755 %{_GOPATH}/bin/ssm-client $RPM_BUILD_ROOT/usr/sbin/pmm-admin
 install -m 0755 -d $RPM_BUILD_ROOT/opt/ss/ssm-client
 install -m 0755 -d $RPM_BUILD_ROOT/opt/ss/qan-agent/bin
 install -m 0755 -d $RPM_BUILD_ROOT/opt/ss/ssm-client/textfile-collector
-install -m 0755 -d $RPM_BUILD_ROOT/etc/systemd/system
+install -m 0755 -d $RPM_BUILD_ROOT/lib/systemd/system
 install -m 0755 -d $RPM_BUILD_ROOT/etc/rsyslog.d/
 install -m 0755 -d $RPM_BUILD_ROOT/etc/logrotate.d/
 install -m 0755 %{_GOPATH}/bin/node_exporter $RPM_BUILD_ROOT/opt/ss/ssm-client/
@@ -102,8 +102,8 @@ install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/suppo
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/support-files/config/mongodb_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter/support-files/config/postgres_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter/support-files/config/proxysql_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
-install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/{node,mysqld,mongodb,postgres,proxysql}_exporter/ssm-*.service $RPM_BUILD_ROOT/etc/systemd/system/
-install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/ssm-*.service $RPM_BUILD_ROOT/etc/systemd/system/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/{node,mysqld,mongodb,postgres,proxysql}_exporter/ssm-*.service $RPM_BUILD_ROOT/lib/systemd/system/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/ssm-*.service $RPM_BUILD_ROOT/lib/systemd/system/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/support-files/rsyslog.d/* $RPM_BUILD_ROOT/etc/rsyslog.d/
@@ -138,6 +138,19 @@ if [ $1 -gt 1 ]; then
     fi
 
     ssm-admin upgrade
+
+    # backup /etc/systemd/system/ssm-*.service files (if any) and
+    # restore them later, as they will be removed after the removal
+    # of the old package
+    for file in /etc/systemd/system/ssm-*.service; do
+        if ! [ -f "$file" ]; then
+            continue
+        fi
+
+        if ! [ -f "${file}.rpmsave" ]; then
+            cp "$file" "${file}.rpmsave"
+        fi
+    done
 fi
 
 %systemd_post ssm-linux-metrics.service
@@ -178,16 +191,30 @@ fi
 %systemd_postun ssm-postgresql-metrics.service
 %systemd_postun ssm-proxysql-metrics.service
 
+%posttrans
+# restore /etc/systemd/system/ssm-*.service files (if any)
+for file in /etc/systemd/system/ssm-*.service.rpmsave; do
+    if ! [ -f "$file" ]; then
+        continue
+    fi
+
+    if ! [ -f "${file%.rpmsave}" ]; then
+        mv "$file" "${file%.rpmsave}"
+    else
+        rm -f "$file"
+    fi
+done
+
 %files
 %dir /opt/ss/ssm-client
 %dir /opt/ss/ssm-client/textfile-collector
 %dir /opt/ss/qan-agent/bin
 /opt/ss/ssm-client/textfile-collector/*
 /opt/ss/ssm-client/*
-%config /opt/ss/ssm-client/*.conf
+%config(noreplace) /opt/ss/ssm-client/*.conf
 /opt/ss/qan-agent/bin/*
-%config /etc/systemd/system/ssm-*.service
+%config /lib/systemd/system/ssm-*.service
 /usr/sbin/ssm-admin
 /usr/sbin/pmm-admin
-%config /etc/rsyslog.d/ssm-*.conf
-%config /etc/logrotate.d/ssm-*
+%config(noreplace) /etc/rsyslog.d/ssm-*.conf
+%config(noreplace) /etc/logrotate.d/ssm-*

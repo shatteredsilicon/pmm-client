@@ -3,8 +3,8 @@
 # check init system
 if [ -d "/run/systemd/system" ]; then
     for file in /opt/ss/ssm-client/systemd/*; do
-        if ! [ -f "/etc/systemd/system/$(basename ${file})" ]; then
-            mv "${file}" /etc/systemd/system/
+        if ! [ -f "/lib/systemd/system/$(basename ${file})" ]; then
+            mv "${file}" /lib/systemd/system/
         fi
     done
 elif [ -f "/sbin/upstart-udev-bridge" ] || ([ -f "/sbin/init" ] && [ "$(/sbin/init --version)" == "init (upstart"* ]); then
