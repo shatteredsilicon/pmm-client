@@ -129,6 +129,19 @@ func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info,
 		}
 	} else if err != nil {
 		return nil, err
+	} else {
+		// activate the existing instance
+
+		instance.Deleted = time.Time{}
+		bytes, err := json.Marshal(instance)
+		if err != nil {
+			return nil, err
+		}
+
+		err = a.updateInstance(instance.UUID, bytes)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Write instance config for qan-agent with real DSN.
