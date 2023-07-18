@@ -34,7 +34,7 @@ const (
 var (
 	// you can use `-ldflags -X github.com/shatteredsilicon/ssm-client/pmm.Version=`
 	// to set build version number
-	Version = "1.17.4"
+	Version = "X"
 
 	// you can use `-ldflags -X github.com/shatteredsilicon/ssm-client/pmm.RootDir=`
 	// to set root filesystem for ssm-admin

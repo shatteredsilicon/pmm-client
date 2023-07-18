@@ -66,7 +66,7 @@ cd %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/postgres_exporter/cmd/postgres_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/mongodb_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/proxysql_exporter
-go install -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/ssm.Version=%{_version}'" github.com/shatteredsilicon/ssm-client
+go install -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/ssm.Version=%{version}-%{release}'" github.com/shatteredsilicon/ssm-client
 go install -ldflags="-s -w" github.com/shatteredsilicon/mysqld_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/pid-watchdog
 go install -ldflags="-s -w" github.com/shatteredsilicon/qan-agent/bin/...
