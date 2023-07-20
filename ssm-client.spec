@@ -137,19 +137,26 @@ if [ $1 -gt 1 ]; then
         find /usr/local/percona/qan-agent -maxdepth 1 ! -name bin -exec cp -r "{}" /opt/ss/ssm-client/qan-agent/ \;
     fi
 
-    ssm-admin upgrade
-
-    # backup /etc/systemd/system/ssm-*.service files (if any) and
-    # restore them later, as they will be removed after the removal
-    # of the old package
-    for file in /etc/systemd/system/ssm-*.service; do
+    # backup ssm service files under /etc/systemd/system
+    for file in /etc/systemd/system/ssm-{linux,mysql,mongodb,postgresql,proxysql}-metrics.service /etc/systemd/system/ssm-{mysql,mongodb}-queries.service; do
         if ! [ -f "$file" ]; then
             continue
         fi
 
-        if ! [ -f "${file}.rpmsave" ]; then
-            cp "$file" "${file}.rpmsave"
+        mv "$file" "${file}.rpmsave"
+    done
+
+    # `ssm-admin upgrade` runs `systemctl daemon-reload`
+    ssm-admin upgrade
+
+    # copy back ssm service file to /etc/systemd/system because
+    # they are listed in old package's %files section
+    for file in /etc/systemd/system/ssm-{linux,mysql,mongodb,postgresql,proxysql}-metrics.service.rpmsave /etc/systemd/system/ssm-{mysql,mongodb}-queries.service.rpmsave; do
+        if ! [ -f "$file" ]; then
+            continue
         fi
+
+        cp "$file" "${file%.rpmsave}"
     done
 fi
 
@@ -180,6 +187,8 @@ fi
 if [ "$1" = "0" ]; then
     rm -rf /opt/ss/ssm-client
     rm -rf /opt/ss/qan-agent
+    rm -f /etc/systemd/system/ssm-{linux,mysql,mongodb,postgresql,proxysql}-metrics.service.rpmsave
+    rm -f /etc/systemd/system/ssm-{mysql,mongodb}-queries.service.rpmsave
     echo "Uninstall complete."
 fi
 
@@ -190,20 +199,6 @@ fi
 %systemd_postun ssm-mongodb-queries.service
 %systemd_postun ssm-postgresql-metrics.service
 %systemd_postun ssm-proxysql-metrics.service
-
-%posttrans
-# restore /etc/systemd/system/ssm-*.service files (if any)
-for file in /etc/systemd/system/ssm-*.service.rpmsave; do
-    if ! [ -f "$file" ]; then
-        continue
-    fi
-
-    if ! [ -f "${file%.rpmsave}" ]; then
-        mv "$file" "${file%.rpmsave}"
-    else
-        rm -f "$file"
-    fi
-done
 
 %files
 %dir /opt/ss/ssm-client
