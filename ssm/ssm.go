@@ -681,8 +681,25 @@ func (a *Admin) Uninstall() (count uint16, clientErr, serverErr error) {
 		}
 	}
 
-	// remove any ssm files under /etc/systemd/system, ignore error
-	exec.Command("sh", "-c", "rm -f /etc/systemd/system/ssm-*").Run()
+	// remove saved ssm service files under /etc/systemd/system, ignore error
+	exec.Command(
+		"sh",
+		"-c",
+		"rm -f /etc/systemd/system/ssm-linux-metrics.service.rpmsave"+
+			" /etc/systemd/system/ssm-linux-metrics.service.dpkg-old"+
+			" /etc/systemd/system/ssm-mysql-metrics.service.rpmsave"+
+			" /etc/systemd/system/ssm-mysql-metrics.service.dpkg-old"+
+			" /etc/systemd/system/ssm-mongodb-metrics.service.rpmsave"+
+			" /etc/systemd/system/ssm-mongodb-metrics.service.dpkg-old"+
+			" /etc/systemd/system/ssm-postgresql-metrics.service.rpmsave"+
+			" /etc/systemd/system/ssm-postgresql-metrics.service.dpkg-old"+
+			" /etc/systemd/system/ssm-proxysql-metrics.service.rpmsave"+
+			" /etc/systemd/system/ssm-proxysql-metrics.service.dpkg-old"+
+			" /etc/systemd/system/ssm-mysql-queries.service.rpmsave"+
+			" /etc/systemd/system/ssm-mysql-queries.service.dpkg-old"+
+			" /etc/systemd/system/ssm-mongodb-queries.service.rpmsave"+
+			" /etc/systemd/system/ssm-mongodb-queries.service.dpkg-old",
+	).Run()
 
 	if !fileExists {
 		return
