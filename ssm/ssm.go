@@ -680,6 +680,9 @@ func (a *Admin) Uninstall() (count uint16, clientErr, serverErr error) {
 		}
 	}
 
+	// remove any ssm files under /etc/systemd/system, ignore error
+	exec.Command("sh", "-c", "rm -f /etc/systemd/system/ssm-*").Run()
+
 	if !fileExists {
 		return
 	}
@@ -983,6 +986,12 @@ func (a *Admin) remoteInstanceExists(ctx context.Context, instanceType, instance
 
 // Upgrade upgrades local services
 func (a *Admin) Upgrade() (err error) {
+	if service.Platform() == systemdPlatform {
+		if err := exec.Command("systemctl", "daemon-reload").Run(); err != nil {
+			return err
+		}
+	}
+
 	services := GetLocalServices()
 	for _, svc := range services {
 		if isValidSvcType(svc.serviceType) != nil || !svc.isV1Service() {

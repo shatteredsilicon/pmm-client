@@ -7,6 +7,15 @@ if [ -d "/run/systemd/system" ]; then
             mv "${file}" /lib/systemd/system/
         fi
     done
+
+    # backup ssm service files under /etc/systemd/system
+    for file in /etc/systemd/system/ssm-{linux,mysql,mongodb,postgresql,proxysql}-metrics.service /etc/systemd/system/ssm-{mysql,mongodb}-queries.service; do
+        if ! [ -f "$file" ]; then
+            continue
+        fi
+
+        mv "$file" "${file}.dpkg-old"
+    done
 elif [ -f "/sbin/upstart-udev-bridge" ] || ([ -f "/sbin/init" ] && [ "$(/sbin/init --version)" == "init (upstart"* ]); then
     for file in /opt/ss/ssm-client/init/*; do
         if ! [ -f "/etc/init/$(basename ${file})" ]; then
