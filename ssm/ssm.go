@@ -38,6 +38,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1055,6 +1056,14 @@ func (a *Admin) reconfigureFromSytemd(svc localService) error {
 
 	if !unitFile.HasSection("Service") {
 		return nil
+	}
+
+	// the ini.ShadowLoad method removes the double quotes around
+	// environemnt variables, we need those double quotes back.
+	envStrs := unitFile.Section("Service").Key("Environment").ValueWithShadows()
+	unitFile.Section("Service").DeleteKey("Environment")
+	for _, envStr := range envStrs {
+		unitFile.Section("Service").Key("Environment").AddShadow(strconv.Quote(envStr))
 	}
 
 	err = unitFile.Section("Service").Key("Environment").AddShadow("ON_CONFIGURE=1")
