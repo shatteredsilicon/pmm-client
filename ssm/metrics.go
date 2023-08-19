@@ -23,7 +23,13 @@ import (
 
 	consul "github.com/hashicorp/consul/api"
 	"github.com/shatteredsilicon/ssm-client/ssm/plugin"
+	"github.com/shatteredsilicon/ssm-client/ssm/plugin/mysql"
+	mysqlMetrics "github.com/shatteredsilicon/ssm-client/ssm/plugin/mysql/metrics"
 )
+
+var uninitializedMetrics = map[string]plugin.Metrics{
+	plugin.MySQLMetrics: mysqlMetrics.New(mysqlMetrics.Flags{}, mysql.Flags{}, SSMBaseDir),
+}
 
 // AddMetrics add metrics service to monitoring.
 func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, disableSSL bool) (*plugin.Info, error) {

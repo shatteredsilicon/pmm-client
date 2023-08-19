@@ -26,4 +26,6 @@ type Metrics interface {
 	Cluster() string
 	// Port returns bind port.
 	Port() int
+	// CustomOptions returns key-value map of custom options that are applied
+	CustomOptions() (map[string]string, error)
 }

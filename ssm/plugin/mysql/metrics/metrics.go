@@ -25,23 +25,39 @@ type Flags struct {
 	DisableProcesslist     bool
 }
 
+// disableCollectArgs is a list of optional ssm-admin args to disable mysqld_exporter args.
+var disableCollectArgs = map[string]map[string]string{
+	"tablestats": {
+		"auto_increment.columns":   "0",
+		"info_schema.tables":       "0",
+		"info_schema.tablestats":   "0",
+		"perf_schema.indexiowaits": "0",
+		"perf_schema.tableiowaits": "0",
+		"perf_schema.tablelocks":   "0",
+	},
+	"userstats":   {"info_schema.userstats": "0"},
+	"binlogstats": {"binlog_size": "0"},
+	"processlist": {"info_schema.processlist": "0"},
+}
+
 // New returns *Metrics.
 func New(flags Flags, mysqlFlags mysql.Flags, ssmBaseDir string) *Metrics {
 	return &Metrics{
 		flags:      flags,
 		mysqlFlags: mysqlFlags,
 		ssmBaseDir: ssmBaseDir,
+		cfgPath:    path.Join(ssmBaseDir, "mysqld_exporter.conf"),
 	}
 }
 
 // Metrics implements plugin.Metrics.
 type Metrics struct {
-	flags         Flags
-	mysqlFlags    mysql.Flags
-	ssmBaseDir    string
-	port          int
-	dsn           string
-	optsToDisable []string
+	flags      Flags
+	mysqlFlags mysql.Flags
+	ssmBaseDir string
+	port       int
+	dsn        string
+	cfgPath    string
 }
 
 // Init initializes plugin.
@@ -59,13 +75,7 @@ func (m *Metrics) Init(
 	}
 	m.dsn = info.DSN
 
-	m.optsToDisable, err = optsToDisable(ctx, m.dsn, m.flags)
-	if err != nil {
-		return nil, err
-	}
-
-	cfgPath := path.Join(m.ssmBaseDir, "mysqld_exporter.conf")
-	cfgFile, err := ini.Load(cfgPath)
+	cfgFile, err := ini.Load(m.cfgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +91,11 @@ func (m *Metrics) Init(
 	m.port = int(port)
 
 	// updates collect args
-	for _, args := range m.collectArgs() {
+	optsToDisable, err := optsToDisable(ctx, m.dsn, m.flags)
+	if err != nil {
+		return nil, err
+	}
+	for _, args := range m.collectArgs(optsToDisable) {
 		if args == nil {
 			continue
 		}
@@ -95,7 +109,7 @@ func (m *Metrics) Init(
 	cfgFile.Section("web").Key("auth-file").SetValue(authFile)
 	cfgFile.Section("web").Key("ssl-key-file").SetValue(sslKeyFile)
 	cfgFile.Section("web").Key("ssl-cert-file").SetValue(sslCertFile)
-	err = cfgFile.SaveTo(cfgPath)
+	err = cfgFile.SaveTo(m.cfgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -115,26 +129,11 @@ func (m Metrics) Port() int {
 
 // collectArgs is a list of additional collect arguments
 // that should be updated in config file
-func (m Metrics) collectArgs() []map[string]string {
-	// disableArgs is a list of optional ssm-admin args to disable mysqld_exporter args.
-	var disableArgs = map[string]map[string]string{
-		"tablestats": {
-			"auto_increment.columns":   "0",
-			"info_schema.tables":       "0",
-			"info_schema.tablestats":   "0",
-			"perf_schema.indexiowaits": "0",
-			"perf_schema.tableiowaits": "0",
-			"perf_schema.tablelocks":   "0",
-		},
-		"userstats":   {"info_schema.userstats": "0"},
-		"binlogstats": {"binlog_size": "0"},
-		"processlist": {"info_schema.processlist": "0"},
-	}
-
+func (m Metrics) collectArgs(optsToDisable []string) []map[string]string {
 	// Disable exporter options if set so.
 	args := make([]map[string]string, 0)
-	for _, o := range m.optsToDisable {
-		args = append(args, disableArgs[o])
+	for _, o := range optsToDisable {
+		args = append(args, disableCollectArgs[o])
 	}
 	return args
 }
@@ -148,10 +147,33 @@ func (m Metrics) Executable() string {
 func (m Metrics) KV() map[string][]byte {
 	kv := map[string][]byte{}
 	kv["dsn"] = []byte(utils.SanitizeDSN(m.dsn))
-	for _, o := range m.optsToDisable {
-		kv[o] = []byte("OFF")
-	}
 	return kv
+}
+
+// CustomOptions returns key-value map of custom options that are applied
+func (m Metrics) CustomOptions() (map[string]string, error) {
+	opts := make(map[string]string)
+
+	cfgFile, err := ini.Load(m.cfgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	for opt, collectArgs := range disableCollectArgs {
+		matched := true
+		for key, value := range collectArgs {
+			if utils.CompareINIValues(value, cfgFile.Section("collect").Key(key).Value()) != 0 {
+				matched = false
+				break
+			}
+		}
+
+		if matched {
+			opts[opt] = "OFF"
+		}
+	}
+
+	return opts, nil
 }
 
 // Cluster defines cluster name for the target.
