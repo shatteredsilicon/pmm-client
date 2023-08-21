@@ -69,7 +69,9 @@ go install -ldflags="-s -w" github.com/shatteredsilicon/proxysql_exporter
 go install -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/ssm.Version=%{version}-%{release}'" github.com/shatteredsilicon/ssm-client
 go install -ldflags="-s -w" github.com/shatteredsilicon/mysqld_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/pid-watchdog
-go install -ldflags="-s -w" github.com/shatteredsilicon/qan-agent/bin/...
+pushd %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent
+    GO111MODULE=on go install -mod=vendor -buildvcs=false -ldflags="-s -w" ./bin/...
+popd
 
 strip %{_GOPATH}/bin/* || true
 

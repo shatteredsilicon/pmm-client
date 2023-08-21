@@ -235,6 +235,11 @@ func (a *Admin) getSVCTable(node *consul.CatalogNode) []ServiceStatus {
 			continue
 		}
 
+		metrics := uninitializedMetrics[svc.Service]
+		if metrics == nil {
+			continue
+		}
+
 		typeInName := serviceTypeInName(svc.Service)
 		status := getServiceStatus(fmt.Sprintf("ssm-%s-%d", typeInName, svc.Port)) ||
 			getServiceStatus(serviceName(svc.Service))
@@ -255,6 +260,7 @@ func (a *Admin) getSVCTable(node *consul.CatalogNode) []ServiceStatus {
 				}
 			}
 		}
+
 		// Parse Consul service tags.
 		for _, tag := range svc.Tags {
 			if strings.HasPrefix(tag, "alias_") {
@@ -266,6 +272,13 @@ func (a *Admin) getSVCTable(node *consul.CatalogNode) []ServiceStatus {
 			}
 			tag := strings.Replace(tag, "_", "=", 1)
 			opts = append(opts, tag)
+		}
+
+		// Get custom options
+		if customOpts, err := metrics.CustomOptions(); err == nil {
+			for k, v := range customOpts {
+				opts = append(opts, fmt.Sprintf("%s=%s", k, v))
+			}
 		}
 
 		row := ServiceStatus{

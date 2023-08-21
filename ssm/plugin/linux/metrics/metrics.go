@@ -88,3 +88,8 @@ func (Metrics) KV() map[string][]byte {
 func (Metrics) Cluster() string {
 	return ""
 }
+
+// CustomOptions returns key-value map of custom options that are applied
+func (m Metrics) CustomOptions() (map[string]string, error) {
+	return nil, nil
+}
