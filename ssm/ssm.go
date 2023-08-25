@@ -51,6 +51,7 @@ import (
 
 	"github.com/shatteredsilicon/ssm-client/ssm/managed"
 	"github.com/shatteredsilicon/ssm-client/ssm/plugin"
+	"github.com/shatteredsilicon/ssm-client/ssm/utils"
 	"gopkg.in/ini.v1"
 )
 
@@ -810,6 +811,10 @@ func GetLocalServices(serviceTypes ...string) (services []localService) {
 	}
 
 	for _, svc := range serviceMap {
+		if len(serviceTypes) > 0 && !utils.SliceContains(serviceTypes, svc.serviceType) {
+			continue
+		}
+
 		services = append(services, svc)
 	}
 
