@@ -315,6 +315,14 @@ func (a *Admin) StartStopMonitoring(action, svcType string) (affected bool, err 
 		if err := startService(svcName); err != nil {
 			return false, err
 		}
+	case "enable":
+		if err := enableService(svcName); err != nil {
+			return false, err
+		}
+	case "disable":
+		if err := disableService(svcName); err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -363,6 +371,16 @@ func (a *Admin) StartStopAllMonitoring(action string) (numOfAffected, numOfAll i
 				continue
 			}
 			if err := startService(svc.serviceName); err != nil {
+				errs = append(errs, err)
+				continue
+			}
+		case "enable":
+			if err := enableService(svc.serviceName); err != nil {
+				errs = append(errs, err)
+				continue
+			}
+		case "disable":
+			if err := disableService(svc.serviceName); err != nil {
 				errs = append(errs, err)
 				continue
 			}
