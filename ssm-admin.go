@@ -1355,6 +1355,108 @@ please check the firewall settings whether this system allows incoming connectio
 		},
 	}
 
+	cmdEnable = &cobra.Command{
+		Use:   "enable TYPE [flags] [name]",
+		Short: "Enable monitoring service.",
+		Long: `This command enable the corresponding system service or all.
+
+[name] is an optional argument, by default it is set to the client name of this SSM client.
+		`,
+		Example: `  ssm-admin enable linux:metrics db01.vm
+  ssm-admin enable mysql:queries db01.vm
+  ssm-admin enable --all`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if flagAll {
+				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("enable")
+				if err != nil {
+					fmt.Printf("Error enabling one of the services: %s\n", err)
+					os.Exit(1)
+				}
+				if numOfAll == 0 {
+					fmt.Println("OK, no services found.")
+					os.Exit(0)
+				}
+
+				fmt.Printf("OK, enabled %d services.\n", numOfAffected)
+				// check if server is alive.
+				if err := admin.SetAPI(); err != nil {
+					fmt.Printf("%s\n", err)
+				}
+				os.Exit(0)
+			}
+
+			// Check args.
+			if len(args) == 0 {
+				fmt.Print("No service type specified.\n\n")
+				cmd.Usage()
+				os.Exit(1)
+			}
+			svcType := args[0]
+			admin.ServiceName = admin.Config.ClientName
+			if len(args) > 1 {
+				admin.ServiceName = args[1]
+			}
+
+			if _, err := admin.StartStopMonitoring("enable", svcType); err != nil {
+				fmt.Printf("Error enabling %s service for %s: %s\n", svcType, admin.ServiceName, err)
+				os.Exit(1)
+			}
+
+			fmt.Printf("OK, enabled %s service for %s.\n", svcType, admin.ServiceName)
+		},
+	}
+
+	cmdDisable = &cobra.Command{
+		Use:   "disable TYPE [flags] [name]",
+		Short: "Disable monitoring service.",
+		Long: `This command disable the corresponding system service or all.
+
+[name] is an optional argument, by default it is set to the client name of this SSM client.
+		`,
+		Example: `  ssm-admin disable linux:metrics db01.vm
+  ssm-admin disable mysql:queries db01.vm
+  ssm-admin disable --all`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if flagAll {
+				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("disable")
+				if err != nil {
+					fmt.Printf("Error disabling one of the services: %s\n", err)
+					os.Exit(1)
+				}
+				if numOfAll == 0 {
+					fmt.Println("OK, no services found.")
+					os.Exit(0)
+				}
+
+				fmt.Printf("OK, disabled %d services.\n", numOfAffected)
+				// check if server is alive.
+				if err := admin.SetAPI(); err != nil {
+					fmt.Printf("%s\n", err)
+				}
+				os.Exit(0)
+			}
+
+			// Check args.
+			if len(args) == 0 {
+				fmt.Print("No service type specified.\n\n")
+				cmd.Usage()
+				os.Exit(1)
+			}
+			svcType := args[0]
+			admin.ServiceName = admin.Config.ClientName
+			if len(args) > 1 {
+				admin.ServiceName = args[1]
+			}
+
+			if _, err := admin.StartStopMonitoring("disable", svcType); err != nil {
+				fmt.Printf("Error disabling %s service for %s: %s\n", svcType, admin.ServiceName, err)
+				os.Exit(1)
+			}
+
+			fmt.Printf("OK, disabled %s service for %s.\n", svcType, admin.ServiceName)
+		},
+	}
+
 	cmdPurge = &cobra.Command{
 		Use:   "purge TYPE [flags] [name]",
 		Short: "Purge metrics data on SSM server.",
@@ -1485,6 +1587,8 @@ func main() {
 		cmdStart,
 		cmdStop,
 		cmdRestart,
+		cmdEnable,
+		cmdDisable,
 		cmdShowPass,
 		cmdPurge,
 		cmdRepair,
@@ -1670,6 +1774,8 @@ func main() {
 	cmdStart.Flags().BoolVar(&flagAll, "all", false, "start all monitoring services")
 	cmdStop.Flags().BoolVar(&flagAll, "all", false, "stop all monitoring services")
 	cmdRestart.Flags().BoolVar(&flagAll, "all", false, "restart all monitoring services")
+	cmdEnable.Flags().BoolVar(&flagAll, "all", false, "enable all monitoring services")
+	cmdDisable.Flags().BoolVar(&flagAll, "all", false, "disable all monitoring services")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
