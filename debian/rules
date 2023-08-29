@@ -16,8 +16,8 @@ TMP=$(CURDIR)/debian/tmp
 
 export GOPATH=$(CURDIR)/go
 export GO111MODULE=off
-export GOROOT=/usr/lib/go-1.17
-export PATH:=/usr/lib/go-1.17/bin:$(PATH)
+export GOROOT=/usr/lib/go-1.19
+export PATH:=/usr/lib/go-1.19/bin:$(PATH)
 
 override_dh_auto_build:
 	mkdir -p $(GOPATH)/src/github.com/prometheus
@@ -53,7 +53,8 @@ override_dh_auto_build:
 	go install -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/ssm.Version=%{_version}'" github.com/shatteredsilicon/ssm-client
 	go install -ldflags="-s -w" github.com/shatteredsilicon/mysqld_exporter
 	go install -ldflags="-s -w" github.com/shatteredsilicon/pid-watchdog
-	go install -ldflags="-s -w" github.com/shatteredsilicon/qan-agent/bin/...
+	cd $(GOPATH)/src/github.com/shatteredsilicon/qan-agent && \
+		GO111MODULE=on go install -mod=vendor -buildvcs=false -ldflags="-s -w" ./bin/...
 
 override_dh_auto_install:
 	@echo "RULES.$@"
