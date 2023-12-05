@@ -235,10 +235,7 @@ func (a *Admin) getSVCTable(node *consul.CatalogNode) []ServiceStatus {
 			continue
 		}
 
-		metrics := uninitializedMetrics[svc.Service]
-		if metrics == nil {
-			continue
-		}
+		uninitMetrics := uninitializedMetrics[svc.Service]
 
 		typeInName := serviceTypeInName(svc.Service)
 		status := getServiceStatus(fmt.Sprintf("ssm-%s-%d", typeInName, svc.Port)) ||
@@ -275,9 +272,11 @@ func (a *Admin) getSVCTable(node *consul.CatalogNode) []ServiceStatus {
 		}
 
 		// Get custom options
-		if customOpts, err := metrics.CustomOptions(); err == nil {
-			for k, v := range customOpts {
-				opts = append(opts, fmt.Sprintf("%s=%s", k, v))
+		if uninitMetrics != nil {
+			if customOpts, err := uninitMetrics.CustomOptions(); err == nil {
+				for k, v := range customOpts {
+					opts = append(opts, fmt.Sprintf("%s=%s", k, v))
+				}
 			}
 		}
 
