@@ -230,11 +230,6 @@ func (a *Admin) RemoveQueries(name string) error {
 		return ErrNoService
 	}
 
-	// Ensure qan-agent is started, otherwise it will be an error to stop QAN.
-	if err := startService(fmt.Sprintf("ssm-%s-queries", name)); err != nil {
-		return err
-	}
-
 	// Get UUID of MySQL instance the agent is monitoring from KV.
 	key := fmt.Sprintf("%s/%s/%s/qan_%s_uuid", a.Config.ClientName, consulSvc.ID, a.ServiceName, name)
 	data, _, err := a.consulAPI.KV().Get(key, nil)
@@ -249,10 +244,32 @@ func (a *Admin) RemoveQueries(name string) error {
 	// Stop QAN for this instance on the local agent.
 	agentConfigFile := fmt.Sprintf("%s/config/agent.conf", AgentBaseDir)
 	agentID, err := getAgentID(agentConfigFile)
-	if err != nil {
+	if err == nil {
+		// Ensure qan-agent is started, otherwise it will be an error to stop QAN.
+		if err := startService(fmt.Sprintf("ssm-%s-queries", name)); err != nil {
+			return err
+		}
+
+		if err := a.stopQAN(agentID, uuid); err != nil {
+			return err
+		}
+	} else {
+		// Failed to get agent id, stopping it manually
+		if err := stopService(serviceName(serviceType)); err != nil {
+			return err
+		}
+
+		// Remove config files
+		os.Remove(fmt.Sprintf("%s/config/qan-%s.conf", AgentBaseDir, uuid))
+		os.Remove(fmt.Sprintf("%s/instance/%s.conf", AgentBaseDir, uuid))
+	}
+
+	// Stop and uninstall service.
+	if err := stopService(serviceName(serviceType)); err != nil {
 		return err
 	}
-	if err := a.stopQAN(agentID, uuid); err != nil {
+
+	if err := disableService(serviceName(serviceType)); err != nil {
 		return err
 	}
 
@@ -267,44 +284,13 @@ func (a *Admin) RemoveQueries(name string) error {
 		return err
 	}
 
-	// Remove queries service from Consul only if we have only 1 tag alias_ (the instance in question).
-	var tags []string
-	for _, tag := range consulSvc.Tags {
-		if strings.HasPrefix(tag, "alias_") {
-			if tag != fmt.Sprintf("alias_%s", a.ServiceName) {
-				tags = append(tags, tag)
-			}
-		}
+	// Remove service from Consul.
+	dereg := consul.CatalogDeregistration{
+		Node:      a.Config.ClientName,
+		ServiceID: consulSvc.ID,
 	}
-	if len(tags) == 0 {
-		// Remove service from Consul.
-		dereg := consul.CatalogDeregistration{
-			Node:      a.Config.ClientName,
-			ServiceID: consulSvc.ID,
-		}
-		if _, err := a.consulAPI.Catalog().Deregister(&dereg, nil); err != nil {
-			return err
-		}
-
-		// Stop and uninstall service.
-		if err := stopService(serviceName(serviceType)); err != nil {
-			return err
-		}
-
-		if err := disableService(serviceName(serviceType)); err != nil {
-			return err
-		}
-	} else {
-		// Remove tag from service.
-		consulSvc.Tags = tags
-		reg := consul.CatalogRegistration{
-			Node:    a.Config.ClientName,
-			Address: a.Config.ClientAddress,
-			Service: consulSvc,
-		}
-		if _, err := a.consulAPI.Catalog().Register(&reg, nil); err != nil {
-			return err
-		}
+	if _, err := a.consulAPI.Catalog().Deregister(&dereg, nil); err != nil {
+		return err
 	}
 
 	return nil
