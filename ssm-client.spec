@@ -124,7 +124,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %post
 # Upgrade
-if [ $1 -gt 1 ]; then
+if [ $1 -gt 1 ] || [ -f /usr/local/percona/pmm-client/pmm.yml ]; then
     # Upgrade from PMM
     if [ -f /usr/local/percona/pmm-client/pmm.yml ]; then
         cp /usr/local/percona/pmm-client/pmm.yml /opt/ss/ssm-client/ssm.yml
