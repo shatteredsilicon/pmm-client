@@ -22,9 +22,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/shatteredsilicon/ssm-client/ssm/plugin"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestMakeGrants(t *testing.T) {
