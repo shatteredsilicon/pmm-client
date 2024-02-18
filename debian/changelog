@@ -1,4 +1,4 @@
-ssm-client (%{_version}) unstable; urgency=medium
+ssm-client (%{_version}-%{_release}) unstable; urgency=medium
 
   * Development release
 

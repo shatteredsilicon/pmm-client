@@ -1,0 +1,18 @@
+[submodule "submodules/qan-agent"]
+	path = submodules/qan-agent
+	url = https://github.com/shatteredsilicon/qan-agent
+[submodule "submodules/node_exporter"]
+	path = submodules/node_exporter
+	url = https://github.com/shatteredsilicon/node_exporter
+[submodule "submodules/mysqld_exporter"]
+	path = submodules/mysqld_exporter
+	url = https://github.com/shatteredsilicon/mysqld_exporter
+[submodule "submodules/mongodb_exporter"]
+	path = submodules/mongodb_exporter
+	url = https://github.com/shatteredsilicon/mongodb_exporter
+[submodule "submodules/postgres_exporter"]
+	path = submodules/postgres_exporter
+	url = https://github.com/shatteredsilicon/postgres_exporter
+[submodule "submodules/proxysql_exporter"]
+	path = submodules/proxysql_exporter
+	url = https://github.com/shatteredsilicon/proxysql_exporter
