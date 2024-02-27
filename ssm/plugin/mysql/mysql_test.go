@@ -22,10 +22,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/percona/go-mysql/dsn"
 	"github.com/shatteredsilicon/ssm-client/ssm/plugin"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestMySQLCheck1(t *testing.T) {

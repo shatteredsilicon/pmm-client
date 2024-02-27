@@ -24,14 +24,14 @@ override_dh_auto_build:
 	mkdir -p $(GOPATH)/src/github.com/shatteredsilicon
 	mkdir -p $(GOPATH)/bin
 
-	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/mongodb_exporter-*.tar.gz
-	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/mysqld_exporter-*.tar.gz
-	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/node_exporter-*.tar.gz
-	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/pid-watchdog-*.tar.gz
-	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/ssm-client-*.tar.gz
-	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/postgres_exporter-*.tar.gz
-	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/proxysql_exporter-*.tar.gz
-	tar -C $(GOPATH)/src/github.com/shatteredsilicon -zxf $(CURDIR)/qan-agent-*.tar.gz
+	tar -zxf ssm-client*.tar.gz
+	mv -fT qan-agent $(GOPATH)/src/github.com/shatteredsilicon/qan-agent
+	mv -fT ssm-client $(GOPATH)/src/github.com/shatteredsilicon/ssm-client
+	mv -fT node_exporter $(GOPATH)/src/github.com/shatteredsilicon/node_exporter
+	mv -fT mysqld_exporter $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter
+	mv -fT mongodb_exporter $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter
+	mv -fT postgres_exporter $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter
+	mv -fT proxysql_exporter $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter
 
 	# install promu
 	mv $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/vendor/github.com/prometheus/promu $(GOPATH)/src/github.com/prometheus/
@@ -40,6 +40,7 @@ override_dh_auto_build:
 		go install -ldflags="-s -w" .
 
 	ln -s $(GOPATH)/src/github.com/shatteredsilicon/node_exporter $(GOPATH)/src/github.com/prometheus/node_exporter
+	rm -rf $(GOPATH)/src/github.com/prometheus/node_exporter/vendor/github.com/prometheus/node_exporter
 	cd $(GOPATH)/src/github.com/shatteredsilicon/node_exporter && \
 		make -j$(NPROCS) build && \
 		mv node_exporter $(GOPATH)/bin
@@ -50,9 +51,8 @@ override_dh_auto_build:
 
 	go install -ldflags="-s -w" github.com/shatteredsilicon/mongodb_exporter
 	go install -ldflags="-s -w" github.com/shatteredsilicon/proxysql_exporter
-	go install -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/ssm.Version=%{_version}'" github.com/shatteredsilicon/ssm-client
+	go install -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/ssm.Version=%{_version}-%{_release}'" github.com/shatteredsilicon/ssm-client
 	go install -ldflags="-s -w" github.com/shatteredsilicon/mysqld_exporter
-	go install -ldflags="-s -w" github.com/shatteredsilicon/pid-watchdog
 	cd $(GOPATH)/src/github.com/shatteredsilicon/qan-agent && \
 		GO111MODULE=on go install -mod=vendor -buildvcs=false -ldflags="-s -w" ./bin/...
 
