@@ -2,10 +2,15 @@ BUILDDIR	?= /tmp/ssmbuild
 VERSION		?= 9.4.1
 RELEASE		?= 1
 
+.PHONY: all
+all:
+
 ifeq (0, $(shell hash dpkg 2>/dev/null; echo $$?))
 ARCH	:= $(shell dpkg --print-architecture)
+all: sdeb deb
 else
 ARCH	:= $(shell rpm --eval "%{_arch}")
+all: srpm rpm
 endif
 
 TARBALL_FILE	:= $(BUILDDIR)/tarballs/ssm-client-$(VERSION)-$(RELEASE).tar.gz
@@ -13,9 +18,6 @@ SRPM_FILE		:= $(BUILDDIR)/results/SRPMS/ssm-client-$(VERSION)-$(RELEASE).src.rpm
 RPM_FILE		:= $(BUILDDIR)/results/RPMS/ssm-client-$(VERSION)-$(RELEASE).$(ARCH).rpm
 SDEB_FILES		:= $(BUILDDIR)/results/SDEBS/ssm-client_$(VERSION)-$(RELEASE).dsc $(BUILDDIR)/results/SDEBS/ssm-client_$(VERSION)-$(RELEASE).tar.gz
 DEB_FILES		:= $(BUILDDIR)/results/DEBS/ssm-client_$(VERSION)-$(RELEASE)_$(ARCH).deb $(BUILDDIR)/results/DEBS/ssm-client_$(VERSION)-$(RELEASE)_$(ARCH).changes
-
-.PHONY: all
-all: srpm rpm sdeb deb
 
 $(TARBALL_FILE):
 	mkdir -vp $(shell dirname $(TARBALL_FILE))
