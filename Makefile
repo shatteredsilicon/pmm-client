@@ -26,7 +26,7 @@ $(TARBALL_FILE):
 	tar_args="-C $(shell dirname $(CURDIR)) --transform s/$(shell basename $(CURDIR))/ssm-client/ --exclude '$(shell basename $(CURDIR))/submodules' $(shell basename $(CURDIR))"; \
 	for submodule_dir in $(shell find $(CURDIR)/submodules -maxdepth 1 -mindepth 1 -type d); do \
 		cd $${submodule_dir}; \
-			GO111MODULE=on go mod vendor; \
+			GO111MODULE=on go mod vendor || exit 1; \
 			tar_args="$${tar_args} -C $$(dirname $${submodule_dir}) $$(basename $${submodule_dir})"; \
 	done; \
 	tar -czf $(TARBALL_FILE) $${tar_args}
