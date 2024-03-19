@@ -30,7 +30,7 @@ It provides thorough time-based analysis for MySQL and MongoDB servers to ensure
 as possible.
 
 %prep
-%setup -q -c
+%setup -q -n %{name}
 
 %build
 mkdir -p %{_GOPATH}
@@ -43,40 +43,37 @@ export CGO_ENABLED=0
 %{__mkdir_p} %{_GOPATH}/src/github.com/shatteredsilicon
 %{__mkdir_p} %{_GOPATH}/bin
 
-mv -fT qan-agent %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent
-mv -fT ssm-client %{_GOPATH}/src/github.com/shatteredsilicon/ssm-client
-mv -fT node_exporter %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter
-mv -fT mysqld_exporter %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter
-mv -fT mongodb_exporter %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter
-mv -fT postgres_exporter %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter
-mv -fT proxysql_exporter %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter
+mv -fT submodules/qan-agent %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent
+mv -fT submodules/node_exporter %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter
+mv -fT submodules/mysqld_exporter %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter
+mv -fT submodules/mongodb_exporter %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter
+mv -fT submodules/postgres_exporter %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter
+mv -fT submodules/proxysql_exporter %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter
 
 # install promu
 mv %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/vendor/github.com/prometheus/promu %{_GOPATH}/src/github.com/prometheus/
 cp -R %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/vendor %{_GOPATH}/src/github.com/prometheus/promu/
-cd %{_GOPATH}/src/github.com/prometheus/promu/
+pushd %{_GOPATH}/src/github.com/prometheus/promu/
     go install -ldflags="-s -w" .
+popd
 
 ln -s %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter %{_GOPATH}/src/github.com/prometheus/node_exporter
 rm -rf %{_GOPATH}/src/github.com/prometheus/node_exporter/vendor/github.com/prometheus/node_exporter
-cd %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter
+pushd %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter
 	%{__make} %{?_smp_mflags} build
 	%{__mv} node_exporter %{_GOPATH}/bin
+popd
 
 go install -ldflags="-s -w" github.com/shatteredsilicon/postgres_exporter/cmd/postgres_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/mongodb_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/proxysql_exporter
-go install -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/ssm.Version=%{version}-%{release}'" github.com/shatteredsilicon/ssm-client
 go install -ldflags="-s -w" github.com/shatteredsilicon/mysqld_exporter
 pushd %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent
     GO111MODULE=on go install -mod=vendor -buildvcs=false -ldflags="-s -w" ./bin/...
 popd
+GO111MODULE=on go install -mod=vendor -ldflags="-s -w -X 'github.com/shatteredsilicon/ssm-client/ssm.Version=%{version}-%{release}'" .
 
 strip %{_GOPATH}/bin/* || true
-
-%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/example.prom                       %{_builddir}/ssm-client-%{version}/
-%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/queries-mysqld.yml               %{_builddir}/ssm-client-%{version}/
-%{__cp} %{_GOPATH}/src/github.com/shatteredsilicon/ssm-client/scripts/ssm-dashboard                 %{_builddir}/ssm-client-%{version}/
 
 %install
 install -m 0755 -d $RPM_BUILD_ROOT/usr/sbin
@@ -95,9 +92,8 @@ install -m 0755 %{_GOPATH}/bin/mongodb_exporter $RPM_BUILD_ROOT/opt/ss/ssm-clien
 install -m 0755 %{_GOPATH}/bin/proxysql_exporter $RPM_BUILD_ROOT/opt/ss/ssm-client/
 install -m 0755 %{_GOPATH}/bin/ssm-qan-agent $RPM_BUILD_ROOT/opt/ss/qan-agent/bin/
 install -m 0755 %{_GOPATH}/bin/ssm-qan-agent-installer $RPM_BUILD_ROOT/opt/ss/qan-agent/bin/
-install -m 0644 %{_builddir}/ssm-client-%{version}/queries-mysqld.yml $RPM_BUILD_ROOT/opt/ss/ssm-client
-install -m 0755 %{_builddir}/ssm-client-%{version}/example.prom $RPM_BUILD_ROOT/opt/ss/ssm-client/textfile-collector/
-install -m 0755 %{_builddir}/ssm-client-%{version}/ssm-dashboard $RPM_BUILD_ROOT/opt/ss/ssm-client/
+install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/queries-mysqld.yml $RPM_BUILD_ROOT/opt/ss/ssm-client
+install -m 0755 %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/example.prom $RPM_BUILD_ROOT/opt/ss/ssm-client/textfile-collector/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/support-files/config/node_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mysqld_exporter/support-files/config/mysqld_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
 install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/mongodb_exporter/support-files/config/mongodb_exporter.conf $RPM_BUILD_ROOT/opt/ss/ssm-client/
