@@ -25,13 +25,12 @@ $(TARBALL_FILE):
 	GO111MODULE=on go mod vendor
 	git submodule update --init --force
 
-	tar_args="-C $(shell dirname $(CURDIR)) --transform s/$(shell basename $(CURDIR))/ssm-client/ --exclude '$(shell basename $(CURDIR))/submodules' $(shell basename $(CURDIR))"; \
 	for submodule_dir in $(shell find $(CURDIR)/submodules -maxdepth 1 -mindepth 1 -type d); do \
 		cd $${submodule_dir}; \
 			GO111MODULE=on go mod vendor || exit 1; \
-			tar_args="$${tar_args} -C $$(dirname $${submodule_dir}) $$(basename $${submodule_dir})"; \
 	done; \
-	tar -czf $(TARBALL_FILE) $${tar_args}
+
+	tar -czf $(TARBALL_FILE) -C $(shell dirname $(CURDIR)) --transform s/^$(shell basename $(CURDIR))/ssm-client/ $(shell basename $(CURDIR))
 
 .PHONY: srpm
 srpm: $(SRPM_FILE)
@@ -98,4 +97,4 @@ $(DEB_FILES): $(SDEB_FILES)
 
 .PHONY: clean
 clean:
-	rm -rf $(BUILDDIR)/*
+	rm -rf $(BUILDDIR)/{tarballs,rpmbuild,debbuild,mock,results}
