@@ -28,6 +28,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"syscall"
+	"time"
 
 	consul "github.com/hashicorp/consul/api"
 	"github.com/shatteredsilicon/ssm/proto"
@@ -35,18 +37,23 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Config pmm.yml config file.
+const (
+	relabelKeyTpl = "%s/relabel"
+)
+
+// Config ssm.yml config file.
 type Config struct {
-	ServerAddress     string `yaml:"server_address"`
-	ClientAddress     string `yaml:"client_address"`
-	BindAddress       string `yaml:"bind_address"`
-	ClientName        string `yaml:"client_name"`
-	MySQLPassword     string `yaml:"mysql_password,omitempty"`
-	ServerUser        string `yaml:"server_user,omitempty"`
-	ServerPassword    string `yaml:"server_password,omitempty"`
-	ServerSSL         bool   `yaml:"server_ssl,omitempty"`
-	ServerInsecureSSL bool   `yaml:"server_insecure_ssl,omitempty"`
-	ManagedAPIPath    string `yaml:"managed_api_path"`
+	ServerAddress     string    `yaml:"server_address"`
+	ClientAddress     string    `yaml:"client_address"`
+	BindAddress       string    `yaml:"bind_address"`
+	ClientName        string    `yaml:"client_name"`
+	MySQLPassword     string    `yaml:"mysql_password,omitempty"`
+	ServerUser        string    `yaml:"server_user,omitempty"`
+	ServerPassword    string    `yaml:"server_password,omitempty"`
+	ServerSSL         bool      `yaml:"server_ssl,omitempty"`
+	ServerInsecureSSL bool      `yaml:"server_insecure_ssl,omitempty"`
+	ManagedAPIPath    string    `yaml:"managed_api_path"`
+	CTime             time.Time `yaml:"-"` // read from ctime
 }
 
 // LoadConfig read SSM client config file.
@@ -61,6 +68,12 @@ func (a *Admin) LoadConfig() error {
 	}
 	if err := yaml.Unmarshal(bytes, a.Config); err != nil {
 		return err
+	}
+	if fh, err := os.Stat(ConfigFile); err != nil {
+		return err
+	} else {
+		stat := fh.Sys().(*syscall.Stat_t)
+		a.Config.CTime = time.Unix(stat.Ctim.Sec, stat.Ctim.Nsec)
 	}
 
 	// If not set previously, assume it equals to client address.
@@ -164,11 +177,15 @@ It has the active services so you cannot change client name as requested.`,
 			return fmt.Errorf("Unable to communicate with Consul: %s", err)
 		}
 
-		if node != nil && len(node.Services) > 0 {
-			if !flagForce {
-				return errors.New("This client has active services. Some data might be lost, you can add --force flag to proceed further.")
-			}
+		if node != nil && len(node.Services) > 0 && !flagForce {
+			return errors.New("This client has active services. Some data might be lost, you can add --force flag to proceed further.")
+		}
 
+		if err = a.addRelabelKV(newName, oldName); err != nil {
+			return fmt.Errorf("Unable to communicate with Consul: %s", err)
+		}
+
+		if node != nil && len(node.Services) > 0 {
 			// At the time of writing there is no easy way to rename node.
 			// To do this all services needs to be de-registered and registered again with new name
 			errs := a.renameClientNameInServices(node, oldName, newName)
@@ -351,9 +368,9 @@ func isAddressLocal(myAddress string) bool {
 // renameClientNameInServices changes a clientName in all services
 func (a *Admin) renameClientNameInServices(node *consul.CatalogNode, oldName, newName string) (errs Errors) {
 	for _, svc := range node.Services {
-		for k, v := range svc.Tags {
-			if v == fmt.Sprintf("alias_%s", oldName) {
-				svc.Tags[k] = fmt.Sprintf("alias_%s", newName)
+		for i := range svc.Tags {
+			if svc.Tags[i] == fmt.Sprintf("alias_%s", oldName) {
+				svc.Tags[i] = fmt.Sprintf("alias_%s", newName)
 			}
 		}
 
@@ -488,4 +505,45 @@ func (a *Admin) updateInstance(inUUID string, bytes []byte) error {
 
 	}
 	return nil
+}
+
+type relabelConsulValue struct {
+	OldName string `json:"old_name"`
+	Start   int64  `json:"start"` // milliseconds
+	End     int64  `json:"end"`   // milliseconds
+}
+
+func (a *Admin) addRelabelKV(newName, oldName string) error {
+	data, _, err := a.consulAPI.KV().Get(fmt.Sprintf(relabelKeyTpl, oldName), nil)
+	if err != nil {
+		return err
+	}
+
+	startTime, endTime := a.Config.CTime.UnixMilli(), time.Now().UnixMilli()
+	var relabelValues []relabelConsulValue
+	if data != nil {
+		if err = json.Unmarshal(data.Value, &relabelValues); err != nil {
+			return err
+		}
+
+		for i := range relabelValues {
+			if relabelValues[i].End > int64(startTime) {
+				startTime = relabelValues[i].End
+			}
+		}
+	}
+
+	relabelValues = append(relabelValues, relabelConsulValue{
+		OldName: oldName,
+		Start:   startTime,
+		End:     endTime,
+	})
+	b, _ := json.Marshal(relabelValues)
+
+	d := &consul.KVPair{
+		Key:   fmt.Sprintf(relabelKeyTpl, newName),
+		Value: b,
+	}
+	_, err = a.consulAPI.KV().Put(d, nil)
+	return err
 }
