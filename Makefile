@@ -1,5 +1,5 @@
 BUILDDIR	?= /tmp/ssmbuild
-VERSION		?= 9.4.1
+VERSION		?=
 RELEASE		?= 1
 
 .PHONY: all
