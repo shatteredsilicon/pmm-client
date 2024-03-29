@@ -1,5 +1,5 @@
 BUILDDIR	?= /tmp/ssmbuild
-VERSION		?= 9.4.1
+VERSION		?=
 RELEASE		?= 1
 
 .PHONY: all
@@ -30,7 +30,7 @@ $(TARBALL_FILE):
 			GO111MODULE=on go mod vendor || exit 1; \
 	done; \
 
-	tar -czf $(TARBALL_FILE) -C $(shell dirname $(CURDIR)) --transform s/^$(shell basename $(CURDIR))/ssm-client/ $(shell basename $(CURDIR))
+	tar --exclude-vcs -czf $(TARBALL_FILE) -C $(shell dirname $(CURDIR)) --transform s/^$(shell basename $(CURDIR))/ssm-client/ $(shell basename $(CURDIR))
 
 .PHONY: srpm
 srpm: $(SRPM_FILE)
