@@ -33,22 +33,11 @@ override_dh_auto_build:
 		mv -fT submodules/postgres_exporter $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter && \
 		mv -fT submodules/proxysql_exporter $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter
 
-	# install promu
-	mv $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/vendor/github.com/prometheus/promu $(GOPATH)/src/github.com/prometheus/
-	cp -R $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/vendor $(GOPATH)/src/github.com/prometheus/promu/
-	cd $(GOPATH)/src/github.com/prometheus/promu/ && \
-		go install -ldflags="-s -w" .
-
-	ln -s $(GOPATH)/src/github.com/shatteredsilicon/node_exporter $(GOPATH)/src/github.com/prometheus/node_exporter
-	rm -rf $(GOPATH)/src/github.com/prometheus/node_exporter/vendor/github.com/prometheus/node_exporter
-	cd $(GOPATH)/src/github.com/shatteredsilicon/node_exporter && \
-		make -j$(NPROCS) build && \
-		mv node_exporter $(GOPATH)/bin
-
 	cd $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter && \
 		go build -ldflags="-s -w" github.com/shatteredsilicon/postgres_exporter/cmd/postgres_exporter && \
 		mv postgres_exporter $(GOPATH)/bin
 
+	go install -ldflags="-s -w" github.com/shatteredsilicon/node_exporter
 	go install -ldflags="-s -w" github.com/shatteredsilicon/mongodb_exporter
 	go install -ldflags="-s -w" github.com/shatteredsilicon/proxysql_exporter
 	go install -ldflags="-s -w" github.com/shatteredsilicon/mysqld_exporter

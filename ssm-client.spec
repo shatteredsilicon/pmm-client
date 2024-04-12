@@ -50,20 +50,7 @@ mv -fT submodules/mongodb_exporter %{_GOPATH}/src/github.com/shatteredsilicon/mo
 mv -fT submodules/postgres_exporter %{_GOPATH}/src/github.com/shatteredsilicon/postgres_exporter
 mv -fT submodules/proxysql_exporter %{_GOPATH}/src/github.com/shatteredsilicon/proxysql_exporter
 
-# install promu
-mv %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/vendor/github.com/prometheus/promu %{_GOPATH}/src/github.com/prometheus/
-cp -R %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter/vendor %{_GOPATH}/src/github.com/prometheus/promu/
-pushd %{_GOPATH}/src/github.com/prometheus/promu/
-    go install -ldflags="-s -w" .
-popd
-
-ln -s %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter %{_GOPATH}/src/github.com/prometheus/node_exporter
-rm -rf %{_GOPATH}/src/github.com/prometheus/node_exporter/vendor/github.com/prometheus/node_exporter
-pushd %{_GOPATH}/src/github.com/shatteredsilicon/node_exporter
-	%{__make} %{?_smp_mflags} build
-	%{__mv} node_exporter %{_GOPATH}/bin
-popd
-
+go install -ldflags="-s -w" github.com/shatteredsilicon/node_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/postgres_exporter/cmd/postgres_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/mongodb_exporter
 go install -ldflags="-s -w" github.com/shatteredsilicon/proxysql_exporter
