@@ -16,7 +16,7 @@ require (
 	github.com/percona/kardianos-service v0.0.0-20190315212910-599703f26f3b
 	github.com/prometheus/client_golang v0.8.0
 	github.com/prometheus/common v0.0.0-20180326160409-38c53a9f4bfc
-	github.com/shatteredsilicon/ssm v0.0.0-20230711162911-700778e669ee
+	github.com/shatteredsilicon/ssm v0.0.0-20240611172354-eb902b433914
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/net v0.1.0
