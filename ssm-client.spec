@@ -118,7 +118,7 @@ if [ $1 -gt 1 ] || [ -f /usr/local/percona/pmm-client/pmm.yml ]; then
         cp /usr/local/percona/pmm-client/server.key /opt/ss/ssm-client/server.key
     fi
     if [ -d /usr/local/percona/qan-agent ]; then
-        find /usr/local/percona/qan-agent -maxdepth 1 ! -name bin -exec cp -r "{}" /opt/ss/ssm-client/qan-agent/ \;
+        find /usr/local/percona/qan-agent -maxdepth 1 ! -path /usr/local/percona/qan-agent ! -name bin -exec cp -r "{}" /opt/ss/qan-agent/ \;
     fi
 
     # backup ssm service files under /etc/systemd/system

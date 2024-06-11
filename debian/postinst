@@ -52,7 +52,7 @@ if [ "$1" == "configure" ]; then
         cp /opt/ss/percona/pmm-client/server.key /opt/ss/ssm-client/server.key
     fi
     if [ -d /opt/ss/percona/qan-agent ]; then
-        find /opt/ss/percona/qan-agent -maxdepth 1 ! -name bin -exec cp -r "{}" /opt/ss/ssm-client/qan-agent/ \;
+        find /opt/ss/percona/qan-agent -maxdepth 1 ! -path /opt/ss/percona/qan-agent ! -name bin -exec cp -r "{}" /opt/ss/qan-agent/ \;
     fi
 
     ssm-admin upgrade
