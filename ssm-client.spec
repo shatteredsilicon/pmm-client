@@ -109,15 +109,15 @@ rm -rf $RPM_BUILD_ROOT
 if [ $1 -gt 1 ] || [ -f /usr/local/percona/pmm-client/pmm.yml ]; then
     # Upgrade from PMM
     if [ -f /usr/local/percona/pmm-client/pmm.yml ]; then
-        cp /usr/local/percona/pmm-client/pmm.yml /opt/ss/ssm-client/ssm.yml
+        cp -n /usr/local/percona/pmm-client/pmm.yml /opt/ss/ssm-client/ssm.yml
     fi
     if [ -f /usr/local/percona/pmm-client/server.crt ]; then
-        cp /usr/local/percona/pmm-client/server.crt /opt/ss/ssm-client/server.crt
+        cp -n /usr/local/percona/pmm-client/server.crt /opt/ss/ssm-client/server.crt
     fi
     if [ -f /usr/local/percona/pmm-client/server.key ]; then
-        cp /usr/local/percona/pmm-client/server.key /opt/ss/ssm-client/server.key
+        cp -n /usr/local/percona/pmm-client/server.key /opt/ss/ssm-client/server.key
     fi
-    if [ -d /usr/local/percona/qan-agent ]; then
+    if [ -d /usr/local/percona/qan-agent ] && [ ! -f /opt/ss/qan-agent/config/agent.conf ]; then
         find /usr/local/percona/qan-agent -maxdepth 1 ! -path /usr/local/percona/qan-agent ! -name bin -exec cp -r "{}" /opt/ss/qan-agent/ \;
     fi
 
