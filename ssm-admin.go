@@ -141,6 +141,10 @@ var (
 				return
 			}
 
+			if ssm.IsOfflineAction(cmd.Name()) {
+				return
+			}
+
 			// Set APIs and check if server is alive.
 			if err := admin.SetAPI(); err != nil {
 				fmt.Printf("%s\n", err)
@@ -1440,10 +1444,6 @@ please check the firewall settings whether this system allows incoming connectio
 				}
 
 				fmt.Printf("OK, disabled %d services.\n", numOfAffected)
-				// check if server is alive.
-				if err := admin.SetAPI(); err != nil {
-					fmt.Printf("%s\n", err)
-				}
 				os.Exit(0)
 			}
 

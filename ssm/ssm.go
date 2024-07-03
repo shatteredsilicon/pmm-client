@@ -278,12 +278,14 @@ func (a *Admin) StartStopMonitoring(action, svcType string) (affected bool, err 
 	}
 
 	// Check if we have this service on Consul.
-	consulSvc, err := a.getConsulService(svcType, a.ServiceName)
-	if err != nil {
-		return false, err
-	}
-	if consulSvc == nil {
-		return false, ErrNoService
+	if !IsOfflineAction(action) {
+		consulSvc, err := a.getConsulService(svcType, a.ServiceName)
+		if err != nil {
+			return false, err
+		}
+		if consulSvc == nil {
+			return false, ErrNoService
+		}
 	}
 
 	var svcName string
@@ -336,14 +338,15 @@ func (a *Admin) StartStopAllMonitoring(action string) (numOfAffected, numOfAll i
 	numOfAll = len(localServices)
 
 	for _, svc := range localServices {
-		// only operate in-sync services
-		consulSvc, err := a.getConsulService(svc.serviceType, a.ServiceName)
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		if consulSvc == nil {
-			continue
+		if !IsOfflineAction(action) {
+			consulSvc, err := a.getConsulService(svc.serviceType, a.ServiceName)
+			if err != nil {
+				errs = append(errs, err)
+				continue
+			}
+			if consulSvc == nil {
+				continue
+			}
 		}
 
 		switch action {

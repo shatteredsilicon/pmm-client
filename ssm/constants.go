@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/shatteredsilicon/ssm-client/ssm/plugin"
+	"github.com/shatteredsilicon/ssm-client/ssm/utils"
 )
 
 const (
@@ -63,6 +64,8 @@ var (
 		plugin.PostgreSQLExporter,
 		plugin.ProxySQLExporter,
 	}
+
+	offlineActions = []string{"stop", "disable"}
 )
 
 type Errors []error
@@ -101,4 +104,10 @@ func join(a []error, sep string) string {
 		}
 	}
 	return string(b)
+}
+
+// IsOfflineAction checks whether an action
+// is an offline-allowed action
+func IsOfflineAction(action string) bool {
+	return utils.SliceContains(offlineActions, action)
 }
