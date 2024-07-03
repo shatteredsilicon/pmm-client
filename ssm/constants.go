@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/shatteredsilicon/ssm-client/ssm/plugin"
 )
 
 const (
@@ -51,6 +53,16 @@ var (
 	ErrDuplicate  = errors.New("there is already one instance with this name under monitoring.")
 	ErrNoService  = errors.New("no service found.")
 	errNoInstance = errors.New("no instance found on QAN API.")
+)
+
+var (
+	exporterList = []string{
+		plugin.NodeExporter,
+		plugin.MySQLExporter,
+		plugin.MongoDBExporter,
+		plugin.PostgreSQLExporter,
+		plugin.ProxySQLExporter,
+	}
 )
 
 type Errors []error

@@ -577,13 +577,22 @@ func (a *Admin) CheckVersion(ctx context.Context) (fatal bool, err error) {
 }
 
 // CheckInstallation check for broken installation.
-func (a *Admin) CheckInstallation() (hasV1Services bool, orphanedServices, missingServices []string) {
+func (a *Admin) CheckInstallation() (upgradeRequired bool, orphanedServices, missingServices []string) {
 	localServices := GetLocalServices()
 	activeServices := GetLocalActiveServices()
 
 	for _, svc := range localServices {
 		if svc.isV1Service() {
-			hasV1Services = true
+			upgradeRequired = true
+			break
+		}
+	}
+
+	// check if there are new config files
+	// needed migration
+	for _, exporter := range exporterList {
+		if _, err := os.Stat(path.Join(SSMBaseDir, "config", exporter+".conf")); err == nil {
+			upgradeRequired = true
 			break
 		}
 	}
@@ -618,13 +627,13 @@ ForLoop2:
 		missingServices = append(missingServices, svc.ID)
 	}
 
-	return hasV1Services, orphanedServices, missingServices
+	return upgradeRequired, orphanedServices, missingServices
 }
 
 // RepairInstallation repair installation.
 func (a *Admin) RepairInstallation() error {
-	hasV1Services, orphanedServices, missingServices := a.CheckInstallation()
-	if hasV1Services {
+	upgradeRequired, orphanedServices, missingServices := a.CheckInstallation()
+	if upgradeRequired {
 		if err := a.Upgrade(); err != nil {
 			return err
 		}
@@ -1027,6 +1036,10 @@ func (a *Admin) remoteInstanceExists(ctx context.Context, instanceType, instance
 
 // Upgrade upgrades local services
 func (a *Admin) Upgrade() (err error) {
+	if err = a.migrateExporterConfigs(); err != nil {
+		return err
+	}
+
 	if service.Platform() == systemdPlatform {
 		if err := exec.Command("systemctl", "daemon-reload").Run(); err != nil {
 			return err
@@ -1231,4 +1244,77 @@ func (a *Admin) replacePMMDir(svc localService, serviceFilePath string) error {
 		),
 		serviceFilePath,
 	).Run()
+}
+
+func (a *Admin) migrateExporterConfigs() error {
+	configsDir := path.Join(SSMBaseDir, "config")
+
+	for _, exporter := range exporterList {
+		newConfigPath := path.Join(configsDir, exporter+".conf")
+		oriConfigPath := path.Join(SSMBaseDir, exporter+".conf")
+
+		// new config
+		if _, err := os.Stat(newConfigPath); os.IsNotExist(err) {
+			continue
+		} else if err != nil {
+			return err
+		}
+
+		// original config
+		oriStat, err := os.Stat(oriConfigPath)
+		if os.IsNotExist(err) {
+			// Just mv new config if original config doesn't exist
+			if err = os.Rename(newConfigPath, oriConfigPath); err != nil {
+				return err
+			}
+			continue
+		} else if err != nil {
+			return err
+		}
+
+		if oriStat.Mode().String() != "-rw-------" {
+			if err = os.Chmod(oriConfigPath, 0600); err != nil {
+				return err
+			}
+		}
+
+		// merge new config into original config
+		newIni, err := ini.Load(newConfigPath)
+		if err != nil {
+			return err
+		}
+		oriIni, err := ini.Load(oriConfigPath)
+		if err != nil {
+			return err
+		}
+
+		for _, sectionName := range append(newIni.SectionStrings(), "") {
+			for _, keyName := range newIni.Section(sectionName).KeyStrings() {
+				if oriIni.Section(sectionName).HasKey(keyName) {
+					continue
+				}
+
+				_, err = oriIni.Section(sectionName).NewKey(keyName, newIni.Section(sectionName).Key(keyName).Value())
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		if err = oriIni.SaveTo(oriConfigPath); err != nil {
+			return err
+		}
+
+		if err = os.Remove(newConfigPath); err != nil {
+			return err
+		}
+	}
+
+	// delete the config dir, and if there's a problem
+	// deleteing the config dir (either it's not empty,
+	// not exists or it just fails to delete it), we just
+	// ignore it as all the config file have been migrated,
+	// we can live with this dir not being removed
+	os.Remove(configsDir)
+	return nil
 }
