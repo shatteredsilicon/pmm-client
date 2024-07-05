@@ -1211,7 +1211,7 @@ please check the firewall settings whether this system allows incoming connectio
 	}
 
 	cmdStart = &cobra.Command{
-		Use:   "start TYPE [flags] [name]",
+		Use:   "start [TYPE] [flags] [name]",
 		Short: "Start monitoring service.",
 		Long: `This command starts the corresponding system service or all.
 
@@ -1221,7 +1221,7 @@ please check the firewall settings whether this system allows incoming connectio
   ssm-admin start mysql:queries db01.vm
   ssm-admin start --all`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if flagAll {
+			if flagAll || len(args) == 0 {
 				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("start")
 				if err != nil {
 					fmt.Printf("Error starting one of the services: %s\n", err)
@@ -1243,12 +1243,6 @@ please check the firewall settings whether this system allows incoming connectio
 				os.Exit(0)
 			}
 
-			// Check args.
-			if len(args) == 0 {
-				fmt.Print("No service type specified.\n\n")
-				cmd.Usage()
-				os.Exit(1)
-			}
 			svcType := args[0]
 			admin.ServiceName = admin.Config.ClientName
 			if len(args) > 1 {
@@ -1268,7 +1262,7 @@ please check the firewall settings whether this system allows incoming connectio
 		},
 	}
 	cmdStop = &cobra.Command{
-		Use:   "stop TYPE [flags] [name]",
+		Use:   "stop [TYPE] [flags] [name]",
 		Short: "Stop monitoring service.",
 		Long: `This command stops the corresponding system service or all.
 
@@ -1278,7 +1272,7 @@ please check the firewall settings whether this system allows incoming connectio
   ssm-admin stop mysql:queries db01.vm
   ssm-admin stop --all`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if flagAll {
+			if flagAll || len(args) == 0 {
 				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("stop")
 				if err != nil {
 					fmt.Printf("Error stopping one of the services: %s\n", err)
@@ -1296,12 +1290,6 @@ please check the firewall settings whether this system allows incoming connectio
 				os.Exit(0)
 			}
 
-			// Check args.
-			if len(args) == 0 {
-				fmt.Print("No service type specified.\n\n")
-				cmd.Usage()
-				os.Exit(1)
-			}
 			svcType := args[0]
 			admin.ServiceName = admin.Config.ClientName
 			if len(args) > 1 {
@@ -1321,7 +1309,7 @@ please check the firewall settings whether this system allows incoming connectio
 		},
 	}
 	cmdRestart = &cobra.Command{
-		Use:   "restart TYPE [flags] [name]",
+		Use:   "restart [TYPE] [flags] [name]",
 		Short: "Restart monitoring service.",
 		Long: `This command restarts the corresponding system service or all.
 
@@ -1331,7 +1319,7 @@ please check the firewall settings whether this system allows incoming connectio
   ssm-admin restart mysql:queries db01.vm
   ssm-admin restart --all`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if flagAll {
+			if flagAll || len(args) == 0 {
 				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("restart")
 				if err != nil {
 					fmt.Printf("Error restarting one of the services: %s\n", err)
@@ -1350,12 +1338,6 @@ please check the firewall settings whether this system allows incoming connectio
 				os.Exit(0)
 			}
 
-			// Check args.
-			if len(args) == 0 {
-				fmt.Print("No service type specified.\n\n")
-				cmd.Usage()
-				os.Exit(1)
-			}
 			svcType := args[0]
 			admin.ServiceName = admin.Config.ClientName
 			if len(args) > 1 {
@@ -1371,7 +1353,7 @@ please check the firewall settings whether this system allows incoming connectio
 	}
 
 	cmdEnable = &cobra.Command{
-		Use:   "enable TYPE [flags] [name]",
+		Use:   "enable [TYPE] [flags] [name]",
 		Short: "Enable monitoring service.",
 		Long: `This command enable the corresponding system service or all.
 
@@ -1381,7 +1363,7 @@ please check the firewall settings whether this system allows incoming connectio
   ssm-admin enable mysql:queries db01.vm
   ssm-admin enable --all`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if flagAll {
+			if flagAll || len(args) == 0 {
 				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("enable")
 				if err != nil {
 					fmt.Printf("Error enabling one of the services: %s\n", err)
@@ -1400,12 +1382,6 @@ please check the firewall settings whether this system allows incoming connectio
 				os.Exit(0)
 			}
 
-			// Check args.
-			if len(args) == 0 {
-				fmt.Print("No service type specified.\n\n")
-				cmd.Usage()
-				os.Exit(1)
-			}
 			svcType := args[0]
 			admin.ServiceName = admin.Config.ClientName
 			if len(args) > 1 {
@@ -1422,7 +1398,7 @@ please check the firewall settings whether this system allows incoming connectio
 	}
 
 	cmdDisable = &cobra.Command{
-		Use:   "disable TYPE [flags] [name]",
+		Use:   "disable [TYPE] [flags] [name]",
 		Short: "Disable monitoring service.",
 		Long: `This command disable the corresponding system service or all.
 
@@ -1432,7 +1408,7 @@ please check the firewall settings whether this system allows incoming connectio
   ssm-admin disable mysql:queries db01.vm
   ssm-admin disable --all`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if flagAll {
+			if flagAll || len(args) == 0 {
 				numOfAffected, numOfAll, err := admin.StartStopAllMonitoring("disable")
 				if err != nil {
 					fmt.Printf("Error disabling one of the services: %s\n", err)
@@ -1447,12 +1423,6 @@ please check the firewall settings whether this system allows incoming connectio
 				os.Exit(0)
 			}
 
-			// Check args.
-			if len(args) == 0 {
-				fmt.Print("No service type specified.\n\n")
-				cmd.Usage()
-				os.Exit(1)
-			}
 			svcType := args[0]
 			admin.ServiceName = admin.Config.ClientName
 			if len(args) > 1 {
