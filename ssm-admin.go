@@ -110,6 +110,11 @@ var (
 				os.Exit(1)
 			}
 
+			// Proceed to "ssm-admin upgrade" if requested.
+			if cmd.Name() == "upgrade" {
+				return
+			}
+
 			// Read config file.
 			if !ssm.FileExists(ssm.ConfigFile) {
 				fmt.Println("SSM client is not configured, missing config file. Please make sure you have run 'ssm-admin config'.")
@@ -136,14 +141,18 @@ var (
 				return
 			}
 
+			if ssm.IsOfflineAction(cmd.Name()) {
+				return
+			}
+
 			// Set APIs and check if server is alive.
 			if err := admin.SetAPI(); err != nil {
 				fmt.Printf("%s\n", err)
 				os.Exit(1)
 			}
 
-			// Proceed to "ssm-admin repair" or "ssm-admin upgrade" if requested.
-			if cmd.Name() == "repair" || cmd.Name() == "upgrade" {
+			// Proceed to "ssm-admin repair" if requested.
+			if cmd.Name() == "repair" {
 				return
 			}
 
@@ -158,9 +167,9 @@ var (
 			}
 
 			// Check for broken installation.
-			hasV1Services, orphanedServices, missingServices := admin.CheckInstallation()
-			if hasV1Services {
-				fmt.Println(`We have found left over v1 system services.
+			upgradeRequired, orphanedServices, missingServices := admin.CheckInstallation()
+			if upgradeRequired {
+				fmt.Println(`An upgrade action is needed.
 Usually, this happens when the upgrade process during the installation fails.
 
 To continue, run 'ssm-admin upgrade' to upgrade services.
@@ -1435,10 +1444,6 @@ please check the firewall settings whether this system allows incoming connectio
 				}
 
 				fmt.Printf("OK, disabled %d services.\n", numOfAffected)
-				// check if server is alive.
-				if err := admin.SetAPI(); err != nil {
-					fmt.Printf("%s\n", err)
-				}
 				os.Exit(0)
 			}
 

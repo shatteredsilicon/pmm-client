@@ -31,16 +31,16 @@ else
 fi
 rm -rf /opt/ss/ssm-client/{systemd,init.d,init}
 
-# copy conf files
-for file in /opt/ss/ssm-client/config/*; do
-    if ! [ -f "/opt/ss/ssm-client/$(basename ${file})" ]; then
+# install
+if [ "$1" == "configure" ] && [ -z "$2" ]; then
+    # copy conf files
+    for file in /opt/ss/ssm-client/config/*; do
         mv "${file}" /opt/ss/ssm-client/
-    fi
-done
-rm -rf /opt/ss/ssm-client/config
+    done
+    [ -z "$(ls -A /opt/ss/ssm-client/config)" ] || rm -rf /opt/ss/ssm-client/config
 
 # upgrade
-if [ "$1" == "configure" ]; then
+elif [ "$1" == "configure" ]; then
     # Upgrade from PMM
     if [ -f /opt/ss/percona/pmm-client/pmm.yml ]; then
         cp -n /opt/ss/percona/pmm-client/pmm.yml /opt/ss/ssm-client/ssm.yml

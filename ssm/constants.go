@@ -21,6 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/shatteredsilicon/ssm-client/ssm/plugin"
+	"github.com/shatteredsilicon/ssm-client/ssm/utils"
 )
 
 const (
@@ -51,6 +54,18 @@ var (
 	ErrDuplicate  = errors.New("there is already one instance with this name under monitoring.")
 	ErrNoService  = errors.New("no service found.")
 	errNoInstance = errors.New("no instance found on QAN API.")
+)
+
+var (
+	exporterList = []string{
+		plugin.NodeExporter,
+		plugin.MySQLExporter,
+		plugin.MongoDBExporter,
+		plugin.PostgreSQLExporter,
+		plugin.ProxySQLExporter,
+	}
+
+	offlineActions = []string{"stop", "disable"}
 )
 
 type Errors []error
@@ -89,4 +104,10 @@ func join(a []error, sep string) string {
 		}
 	}
 	return string(b)
+}
+
+// IsOfflineAction checks whether an action
+// is an offline-allowed action
+func IsOfflineAction(action string) bool {
+	return utils.SliceContains(offlineActions, action)
 }

@@ -13,6 +13,7 @@ export DH_VERBOSE=1
 	dh $@
 
 TMP=$(CURDIR)/debian/tmp
+PACKAGE_ROOT=$(CURDIR)/debian/ssm-client
 
 export GOPATH=$(CURDIR)/go
 export GO111MODULE=off
@@ -70,11 +71,11 @@ override_dh_auto_install:
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/qan-agent/ssm-mongodb-queries.service $(TMP)/
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/ssm-postgresql-metrics.service $(TMP)/
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/ssm-proxysql-metrics.service $(TMP)/
-	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/support-files/config/node_exporter.conf $(TMP)/config/
-	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/support-files/config/mysqld_exporter.conf $(TMP)/config/
-	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter/support-files/config/mongodb_exporter.conf $(TMP)/config/
-	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/support-files/config/postgres_exporter.conf $(TMP)/config/
-	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/support-files/config/proxysql_exporter.conf $(TMP)/config/
+	install -m 0600 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/support-files/config/node_exporter.conf $(TMP)/config/
+	install -m 0600 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/support-files/config/mysqld_exporter.conf $(TMP)/config/
+	install -m 0600 $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter/support-files/config/mongodb_exporter.conf $(TMP)/config/
+	install -m 0600 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/support-files/config/postgres_exporter.conf $(TMP)/config/
+	install -m 0600 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/support-files/config/proxysql_exporter.conf $(TMP)/config/
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/node_exporter/support-files/rsyslog.d/* $(TMP)/rsyslog.d/
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mysqld_exporter/support-files/rsyslog.d/* $(TMP)/rsyslog.d/
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/mongodb_exporter/support-files/rsyslog.d/* $(TMP)/rsyslog.d/
@@ -99,3 +100,7 @@ override_dh_auto_install:
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/postgres_exporter/support-files/init/* $(TMP)/init/
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/proxysql_exporter/support-files/init/* $(TMP)/init/
 	install -m 0644 $(GOPATH)/src/github.com/shatteredsilicon/qan-agent/support-files/init/* $(TMP)/init/
+
+override_dh_fixperms:
+	dh_fixperms
+	chmod 600 $(PACKAGE_ROOT)/opt/ss/ssm-client/config/*
