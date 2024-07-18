@@ -1257,28 +1257,35 @@ func (a *Admin) migrateExporterConfigs() error {
 		oriConfigPath := path.Join(SSMBaseDir, exporter+".conf")
 
 		// new config
-		if _, err := os.Stat(newConfigPath); os.IsNotExist(err) {
-			continue
-		} else if err != nil {
+		newStat, err := os.Stat(newConfigPath)
+		if err != nil && !os.IsNotExist(err) {
 			return err
 		}
 
 		// original config
 		oriStat, err := os.Stat(oriConfigPath)
-		if os.IsNotExist(err) {
-			// Just mv new config if original config doesn't exist
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		// just mv new config if original config doesn't exist
+		if newStat != nil && oriStat == nil {
 			if err = os.Rename(newConfigPath, oriConfigPath); err != nil {
 				return err
 			}
 			continue
-		} else if err != nil {
-			return err
 		}
 
-		if oriStat.Mode().String() != "-rw-------" {
+		if oriStat != nil && oriStat.Mode().String() != "-rw-------" {
 			if err = os.Chmod(oriConfigPath, 0600); err != nil {
 				return err
 			}
+		}
+
+		// following merge process won't be necessary if
+		// one of new/ori configs doesn't exists
+		if newStat == nil || oriStat == nil {
+			continue
 		}
 
 		// merge new config into original config
