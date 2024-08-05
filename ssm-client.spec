@@ -17,6 +17,8 @@ BuildRequires:  glibc-devel, glibc-static, golang, unzip, gzip, make, perl-ExtUt
 Obsoletes: pmm-client <= 1.17.5
 Conflicts: pmm-client > 1.17.5
 
+Requires: percona-toolkit
+
 Requires(post):     systemd
 Requires(preun):    systemd
 Requires(postun):   systemd
