@@ -1051,13 +1051,14 @@ func (a *Admin) Upgrade() (err error) {
 
 	services := GetLocalServices()
 	for _, svc := range services {
-		if isValidSvcType(svc.serviceType) != nil || !svc.isV1Service() {
+		if isValidSvcType(svc.serviceType) != nil {
 			continue
 		}
 
+		isRunning := getServiceStatus(svc.serviceName)
 		svcName := serviceName(svc.serviceType)
 
-		if !svc.isQueries() {
+		if svc.isV1Service() && !svc.isQueries() {
 			switch service.Platform() {
 			case systemdPlatform:
 				err = a.reconfigureFromSytemd(svc)
@@ -1077,7 +1078,6 @@ func (a *Admin) Upgrade() (err error) {
 			}
 		}
 
-		isRunning := getServiceStatus(svc.serviceName)
 		if svc.isV1Service() {
 			if err = uninstallService(svc.serviceName); err != nil {
 				return err
