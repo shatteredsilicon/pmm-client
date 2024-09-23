@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 
 	"github.com/shatteredsilicon/ssm-client/ssm/utils"
 )
@@ -91,7 +92,7 @@ func NewClient(host, basePath, scheme string, user *url.Userinfo, insecureSSL bo
 	}
 }
 
-func (c *Client) do(ctx context.Context, method string, urlPath string, body interface{}, res interface{}) error {
+func (c *Client) do(ctx context.Context, method string, urlPath string, body interface{}, res interface{}, rawQuery ...string) error {
 	var reqBody io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
@@ -106,6 +107,9 @@ func (c *Client) do(ctx context.Context, method string, urlPath string, body int
 		User:   c.user,
 		Host:   c.host,
 		Path:   path.Join(c.basePath, urlPath),
+	}
+	if len(rawQuery) > 0 {
+		u.RawQuery = rawQuery[0]
 	}
 	req, err := http.NewRequest(method, u.String(), reqBody)
 	if err != nil {
@@ -140,9 +144,16 @@ func (c *Client) do(ctx context.Context, method string, urlPath string, body int
 	return json.Unmarshal(b, res)
 }
 
-func (c *Client) ScrapeConfigsList(ctx context.Context) (*APIScrapeConfigsListResponse, error) {
+func (c *Client) ScrapeConfigsList(ctx context.Context, instances ...string) (*APIScrapeConfigsListResponse, error) {
 	res := new(APIScrapeConfigsListResponse)
-	if err := c.do(ctx, "GET", "/v0/scrape-configs", nil, res); err != nil {
+	var queries []string
+	if len(instances) > 0 {
+		queries = make([]string, len(instances))
+		for i := range instances {
+			queries[i] = fmt.Sprintf("instances[]=%s", instances[i])
+		}
+	}
+	if err := c.do(ctx, "GET", "/v0/scrape-configs", nil, res, strings.Join(queries, "&")); err != nil {
 		return nil, err
 	}
 	return res, nil
