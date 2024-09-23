@@ -52,7 +52,7 @@ type ExternalMetrics struct {
 
 // ListExternalMetrics returns external Prometheus exporters.
 func (a *Admin) ListExternalMetrics(ctx context.Context) ([]ExternalMetrics, error) {
-	resp, err := a.managedAPI.ScrapeConfigsList(ctx)
+	resp, err := a.managedAPI.ScrapeConfigsList(ctx, a.Config.ClientName)
 	if err != nil {
 		msg := fmt.Sprintf("Error getting a list of external metrics: %s.", err)
 		if _, ok := err.(*managed.Error); !ok {
@@ -61,8 +61,8 @@ func (a *Admin) ListExternalMetrics(ctx context.Context) ([]ExternalMetrics, err
 		return nil, fmt.Errorf("%s", msg)
 	}
 
-	res := make([]ExternalMetrics, 0)
-	for _, cfg := range resp.ScrapeConfigs {
+	res := make([]ExternalMetrics, len(resp.ScrapeConfigs))
+	for i, cfg := range resp.ScrapeConfigs {
 		d, err := model.ParseDuration(cfg.ScrapeInterval)
 		if err != nil {
 			return nil, err
@@ -75,14 +75,10 @@ func (a *Admin) ListExternalMetrics(ctx context.Context) ([]ExternalMetrics, err
 		timeout := time.Duration(d)
 
 		var targets []ExternalTarget
-		var matched bool
 		for _, sc := range cfg.StaticConfigs {
 			labels := make([]ExternalLabelPair, len(sc.Labels))
 			for i, p := range sc.Labels {
 				labels[i] = ExternalLabelPair{Name: p.Name, Value: p.Value}
-				if sc.Labels[i].Name == "instance" && sc.Labels[i].Value == a.Config.ClientName {
-					matched = true
-				}
 			}
 			for _, t := range sc.Targets {
 				health := ""
@@ -99,17 +95,14 @@ func (a *Admin) ListExternalMetrics(ctx context.Context) ([]ExternalMetrics, err
 				})
 			}
 		}
-		if !matched {
-			continue
-		}
-		res = append(res, ExternalMetrics{
+		res[i] = ExternalMetrics{
 			JobName:        cfg.JobName,
 			ScrapeInterval: interval,
 			ScrapeTimeout:  timeout,
 			MetricsPath:    cfg.MetricsPath,
 			Scheme:         cfg.Scheme,
 			Targets:        targets,
-		})
+		}
 	}
 	return res, nil
 }
