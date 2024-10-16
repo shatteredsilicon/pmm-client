@@ -561,18 +561,11 @@ func (a *Admin) CheckVersion(ctx context.Context) (fatal bool, err error) {
 	}
 
 	// Return warning error if versions do not match.
-	if serverVersion.Version() < clientVersion.Version() {
+	if serverVersion.Major != clientVersion.Major || clientVersion.Minor > serverVersion.Minor {
 		return false, fmt.Errorf(
 			"Warning: The recommended upgrade process is to upgrade SSM Server first, then SSM Clients.\n" +
 				"See Shattered Silicon's instructions for upgrading at " +
-				"https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/deploy/index.md#updating",
-		)
-	}
-	if serverVersion.Version() > clientVersion.Version() {
-		return false, fmt.Errorf(
-			"Warning: It is recommended to use the same version on both SSM Server and Client, otherwise some features will not work correctly.\n" +
-				"Please upgrade your SSM Client by following the instructions from " +
-				"https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/deploy/index.md#updating",
+				"https://shatteredsilicon.net/software/ssm/documentation/latest/deploy/",
 		)
 	}
 
