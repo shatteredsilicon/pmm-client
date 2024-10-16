@@ -565,7 +565,7 @@ func (a *Admin) CheckVersion(ctx context.Context) (fatal bool, err error) {
 		return false, fmt.Errorf(
 			"Warning: The recommended upgrade process is to upgrade SSM Server first, then SSM Clients.\n" +
 				"See Shattered Silicon's instructions for upgrading at " +
-				"https://github.com/shatteredsilicon/ssm-doc/blob/1.x/docs/deploy/index.md#updating",
+				"https://shatteredsilicon.net/software/ssm/documentation/latest/deploy/",
 		)
 	}
 
