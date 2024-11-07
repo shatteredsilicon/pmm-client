@@ -307,7 +307,7 @@ However, you can add another one with the different name just for testing purpos
 
 When adding a MySQL instance, this tool tries to auto-detect the DSN and credentials.
 If you want to create a new user to be used for metrics collecting, provide --create-user option. ssm-admin will create
-a new user 'pmm@' automatically using the given (auto-detected) MySQL credentials for granting purpose.
+a new user 'ssm@' automatically using the given (auto-detected) MySQL credentials for granting purpose.
 
 Table statistics is automatically disabled when there are more than 10000 tables on MySQL.
 
@@ -356,7 +356,7 @@ Table statistics is automatically disabled when there are more than 10000 tables
 			}
 
 			mysqlQueries := mysqlQueries.New(flagQueries, flagMySQLQueries, flagMySQL)
-			info, err = admin.AddQueries(ctx, mysqlQueries)
+			info, err = admin.AddQueries(ctx, mysqlQueries, info)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[mysql:queries] OK, already monitoring MySQL queries.")
 			} else if err != nil {
@@ -375,7 +375,7 @@ Table statistics is automatically disabled when there are more than 10000 tables
 
 When adding a MySQL instance, this tool tries to auto-detect the DSN and credentials.
 If you want to create a new user to be used for metrics collecting, provide --create-user option. ssm-admin will create
-a new user 'pmm@' automatically using the given (auto-detected) MySQL credentials for granting purpose.
+a new user 'ssm@' automatically using the given (auto-detected) MySQL credentials for granting purpose.
 
 Table statistics is automatically disabled when there are more than 10000 tables on MySQL.
 
@@ -405,7 +405,7 @@ Table statistics is automatically disabled when there are more than 10000 tables
 
 When adding a MySQL instance, this tool tries to auto-detect the DSN and credentials.
 If you want to create a new user to be used for query collecting, provide --create-user option. ssm-admin will create
-a new user 'pmm@' automatically using the given (auto-detected) MySQL credentials for granting purpose.
+a new user 'ssm@' automatically using the given (auto-detected) MySQL credentials for granting purpose.
 
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
@@ -428,7 +428,7 @@ Type ssm-admin add mysql:queries --help to see all acceptable flags.
 				os.Exit(1)
 			}
 			mysqlQueries := mysqlQueries.New(flagQueries, flagMySQLQueries, flagMySQL)
-			info, err := admin.AddQueries(ctx, mysqlQueries)
+			info, err := admin.AddQueries(ctx, mysqlQueries, nil)
 			if err != nil {
 				fmt.Println("Error adding MySQL queries:", err)
 				os.Exit(1)
@@ -445,7 +445,7 @@ Type ssm-admin add mysql:queries --help to see all acceptable flags.
 
 When adding a PostgreSQL instance, this tool tries to auto-detect the DSN and credentials.
 If you want to create a new user to be used for metrics collecting, provide --create-user option. ssm-admin will create
-a new user 'pmm' automatically using the given (auto-detected) PostgreSQL credentials for granting purpose.
+a new user 'ssm' automatically using the given (auto-detected) PostgreSQL credentials for granting purpose.
 
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 		`,
@@ -493,7 +493,7 @@ a new user 'pmm' automatically using the given (auto-detected) PostgreSQL creden
 
 When adding a PostgreSQL instance, this tool tries to auto-detect the DSN and credentials.
 If you want to create a new user to be used for metrics collecting, provide --create-user option. ssm-admin will create
-a new user 'pmm' automatically using the given (auto-detected) PostgreSQL credentials for granting purpose.
+a new user 'ssm' automatically using the given (auto-detected) PostgreSQL credentials for granting purpose.
 
 [name] is an optional argument, by default it is set to the client name of this SSM client.
 [exporter_args] are the command line options to be passed directly to Prometheus Exporter.
@@ -559,7 +559,7 @@ When adding a MongoDB instance, you may provide --uri if the default one does no
 			}
 
 			mongodbQueries := mongodbQueries.New(flagQueries, flagMongoURI, admin.Args, ssm.SSMBaseDir)
-			info, err = admin.AddQueries(ctx, mongodbQueries)
+			info, err = admin.AddQueries(ctx, mongodbQueries, info)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("[mongodb:queries] OK, already monitoring MongoDB queries.")
 			} else if err != nil {
@@ -617,7 +617,7 @@ Type ssm-admin add mongodb:queries --help to see all acceptable flags.
 				os.Exit(1)
 			}
 			mongodbQueries := mongodbQueries.New(flagQueries, flagMongoURI, admin.Args, ssm.SSMBaseDir)
-			info, err := admin.AddQueries(ctx, mongodbQueries)
+			info, err := admin.AddQueries(ctx, mongodbQueries, nil)
 			if err == ssm.ErrDuplicate {
 				fmt.Println("Error adding MongoDB queries:", err)
 				os.Exit(1)
@@ -1620,7 +1620,7 @@ func main() {
 	cmdConfig.Flags().StringVar(&flagC.ClientAddress, "client-address", "", "client address, also remote/public address for this system (if omitted it will be automatically detected by asking server)")
 	cmdConfig.Flags().StringVar(&flagC.BindAddress, "bind-address", "", "bind address, also local/private address that is mapped from client address via NAT/port forwarding (defaults to the client address)")
 	cmdConfig.Flags().StringVar(&flagC.ClientName, "client-name", "", "client name (defaults to the system hostname)")
-	cmdConfig.Flags().StringVar(&flagC.ServerUser, "server-user", "pmm", "define HTTP user configured on SSM Server")
+	cmdConfig.Flags().StringVar(&flagC.ServerUser, "server-user", "ssm", "define HTTP user configured on SSM Server")
 	cmdConfig.Flags().StringVar(&flagC.ServerPassword, "server-password", "", "define HTTP password configured on SSM Server")
 	cmdConfig.Flags().BoolVar(&flagC.ServerSSL, "server-ssl", false, "enable SSL to communicate with SSM Server")
 	cmdConfig.Flags().BoolVar(&flagC.ServerInsecureSSL, "server-insecure-ssl", false, "enable insecure SSL (self-signed certificate) to communicate with SSM Server")

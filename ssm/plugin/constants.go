@@ -36,3 +36,7 @@ const (
 	MySQLQueries      = "mysql:queries"
 	MongoDBQueries    = "mongodb:queries"
 )
+
+const (
+	SSMUsername = "ssm"
+)

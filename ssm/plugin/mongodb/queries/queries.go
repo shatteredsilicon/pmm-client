@@ -29,7 +29,7 @@ type Queries struct {
 }
 
 // Init initializes plugin.
-func (q *Queries) Init(ctx context.Context, pmmUserPassword string) (*plugin.Info, error) {
+func (q *Queries) Init(ctx context.Context, ssmUserPassword string, _ *plugin.Info) (*plugin.Info, error) {
 	info, err := mongodb.Init(ctx, q.dsn, q.args, q.pmmBaseDir)
 	if err != nil {
 		return nil, err

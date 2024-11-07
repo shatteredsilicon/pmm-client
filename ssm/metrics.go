@@ -48,8 +48,8 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 		return nil, err
 	}
 
-	if info.PMMUserPassword != "" {
-		a.Config.MySQLPassword = info.PMMUserPassword
+	if info.SSMUserPassword != "" {
+		a.Config.MySQLPassword = info.SSMUserPassword
 		err := a.writeConfig()
 		if err != nil {
 			return nil, err
@@ -63,7 +63,7 @@ func (a *Admin) AddMetrics(ctx context.Context, m plugin.Metrics, force bool, di
 		return nil, err
 	}
 	if consulSvc != nil {
-		return nil, ErrDuplicate
+		return info, ErrDuplicate
 	}
 
 	if err := a.checkGlobalDuplicateService(serviceType, a.ServiceName); err != nil {

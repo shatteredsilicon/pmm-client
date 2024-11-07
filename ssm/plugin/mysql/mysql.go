@@ -31,8 +31,8 @@ type Flags struct {
 	FilterOmit []string
 }
 
-// Init verifies MySQL connection and creates PMM user if requested.
-func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Info, error) {
+// Init verifies MySQL connection and creates SSM user if requested.
+func Init(ctx context.Context, flags Flags, ssmUserPassword string) (*plugin.Info, error) {
 	// Check for invalid mix of flags.
 	if flags.Socket != "" && flags.Host != "" {
 		return nil, errors.New("flags --socket and --host are mutually exclusive")
@@ -40,7 +40,7 @@ func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Inf
 	if flags.Socket != "" && flags.Port != "" {
 		return nil, errors.New("flags --socket and --port are mutually exclusive")
 	}
-	if flags.CreateUser && flags.CreateUserPassword != "" {
+	if !flags.CreateUser && flags.CreateUserPassword != "" {
 		return nil, errors.New("flag --create-user-password should be used along with --create-user")
 	}
 
@@ -68,14 +68,13 @@ func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Inf
 
 	// Test access using detected credentials and stored password.
 	accessOK := false
-	if pmmUserPassword != "" {
-		pmmDSN := userDSN
-		pmmDSN.Username = "pmm"
-		pmmDSN.Password = pmmUserPassword
-		if err := testConnection(ctx, pmmDSN.String()); err == nil {
-			//fmt.Println("Using stored credentials, DSN is", pmmDSN.String())
+	if ssmUserPassword != "" {
+		ssmDSN := userDSN
+		ssmDSN.Username = plugin.SSMUsername
+		ssmDSN.Password = ssmUserPassword
+		if err := testConnection(ctx, ssmDSN.String()); err == nil {
 			accessOK = true
-			userDSN = pmmDSN
+			userDSN = ssmDSN
 			// Not setting this into db connection as it will never have GRANT
 			// in case we want to create a new user below.
 		}
@@ -105,7 +104,7 @@ func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Inf
 		}
 
 		// Store generated password.
-		info.PMMUserPassword = userDSN.Password
+		info.SSMUserPassword = userDSN.Password
 	}
 
 	info.DSN = userDSN.String()
@@ -115,7 +114,7 @@ func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Inf
 
 func createUser(ctx context.Context, db *sql.DB, userDSN dsn.DSN, flags Flags) (dsn.DSN, error) {
 	// New DSN has same host:port or socket, but different user and pass.
-	userDSN.Username = "pmm"
+	userDSN.Username = plugin.SSMUsername
 	if flags.CreateUserPassword != "" {
 		userDSN.Password = flags.CreateUserPassword
 	} else {
@@ -177,7 +176,7 @@ func check(ctx context.Context, db *sql.DB, hosts []string) error {
 
 	// Check if user exists.
 	for _, host := range hosts {
-		if rows, err := db.QueryContext(ctx, fmt.Sprintf("SHOW GRANTS FOR 'pmm'@'%s'", host)); err == nil {
+		if rows, err := db.QueryContext(ctx, fmt.Sprintf("SHOW GRANTS FOR '%s'@'%s'", plugin.SSMUsername, host)); err == nil {
 			// MariaDB requires to check .Next() because err is always nil even user doesn't exist %)
 			if !rows.Next() {
 				continue
@@ -185,8 +184,7 @@ func check(ctx context.Context, db *sql.DB, hosts []string) error {
 			if host == "%" {
 				host = "%%"
 			}
-			errMsg = append(errMsg, fmt.Sprintf("* MySQL user pmm@%s already exists. %s", host,
-				"Try without --create-user flag using the default credentials or specify the existing `pmm` user ones."))
+			errMsg = append(errMsg, fmt.Sprintf("* MySQL user %s@%s already exists. Try without --create-user flag using the default credentials or specify the existing `%s` user ones.", plugin.SSMUsername, host, plugin.SSMUsername))
 			break
 		}
 	}
