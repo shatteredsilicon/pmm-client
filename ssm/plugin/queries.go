@@ -14,7 +14,7 @@ type QueriesFlags struct {
 // Queries is a common interface for all Query Analytics plugins.
 type Queries interface {
 	// Init initializes plugin and returns Info about database.
-	Init(ctx context.Context, pmmUserPassword string) (*Info, error)
+	Init(ctx context.Context, ssmUserPassword string, info *Info) (*Info, error)
 	// Name of the queries.
 	// As the time of writing this is limited to mysql and mongodb.
 	Name() string

@@ -38,10 +38,14 @@ type Queries struct {
 }
 
 // Init initializes plugin.
-func (q *Queries) Init(ctx context.Context, pmmUserPassword string) (*plugin.Info, error) {
-	info, err := mysql.Init(ctx, q.mysqlFlags, pmmUserPassword)
-	if err != nil {
-		return nil, err
+func (q *Queries) Init(ctx context.Context, ssmUserPassword string, info *plugin.Info) (*plugin.Info, error) {
+	var err error
+
+	if info == nil {
+		info, err = mysql.Init(ctx, q.mysqlFlags, ssmUserPassword)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if q.flags.QuerySource == "auto" {

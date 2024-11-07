@@ -38,14 +38,14 @@ import (
 )
 
 // AddQueries add instance to Query Analytics.
-func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries) (*plugin.Info, error) {
-	info, err := q.Init(ctx, a.Config.MySQLPassword)
+func (a *Admin) AddQueries(ctx context.Context, q plugin.Queries, prevInfo *plugin.Info) (*plugin.Info, error) {
+	info, err := q.Init(ctx, a.Config.MySQLPassword, prevInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	if info.PMMUserPassword != "" {
-		a.Config.MySQLPassword = info.PMMUserPassword
+	if info.SSMUserPassword != "" {
+		a.Config.MySQLPassword = info.SSMUserPassword
 		err := a.writeConfig()
 		if err != nil {
 			return nil, err

@@ -8,5 +8,5 @@ type Info struct {
 	Version         string
 	DSN             string
 	QuerySource     string
-	PMMUserPassword string
+	SSMUserPassword string
 }

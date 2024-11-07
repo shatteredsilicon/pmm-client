@@ -82,10 +82,10 @@ func (d DSN) String() string {
 	return buf.String()
 }
 
-// Init verifies PostgreSQL connection and creates PMM user if requested.
-func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Info, error) {
+// Init verifies PostgreSQL connection and creates SSM user if requested.
+func Init(ctx context.Context, flags Flags, ssmUserPassword string) (*plugin.Info, error) {
 	// Check for invalid mix of flags.
-	if flags.CreateUser && flags.CreateUserPassword != "" {
+	if !flags.CreateUser && flags.CreateUserPassword != "" {
 		return nil, errors.New("flag --create-user-password should be used along with --create-user")
 	}
 
@@ -95,14 +95,14 @@ func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Inf
 
 	// Test access using detected credentials and stored password.
 	accessOK := false
-	if pmmUserPassword != "" {
-		pmmDSN := userDSN
-		pmmDSN.User = "pmm"
-		pmmDSN.Password = pmmUserPassword
-		if err := testConnection(ctx, pmmDSN.String()); err != nil {
+	if ssmUserPassword != "" {
+		ssmDSN := userDSN
+		ssmDSN.User = plugin.SSMUsername
+		ssmDSN.Password = ssmUserPassword
+		if err := testConnection(ctx, ssmDSN.String()); err != nil {
 			errs = append(errs, err)
 		} else {
-			userDSN = pmmDSN
+			userDSN = ssmDSN
 			accessOK = true
 		}
 	}
@@ -116,12 +116,12 @@ func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Inf
 		}
 	}
 
-	// If the above fails, try to create `pmm` user with `sudo -u postgres psql`.
+	// If the above fails, try to create `ssm` user with `sudo -u postgres psql`.
 	if !accessOK {
 		// If PostgreSQL server is local and --create-user flag is specified
 		// then try to create user using `sudo -u postgres psql` and use that connection.
 		if userDSN.Host == "" && flags.CreateUser {
-			pmmDSN, err := createUserUsingSudoPSQL(ctx, userDSN, flags)
+			ssmDSN, err := createUserUsingSudoPSQL(ctx, userDSN, flags)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("Cannot create user: %s", err))
 			} else {
@@ -129,7 +129,7 @@ func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Inf
 				if err := testConnection(ctx, userDSN.String()); err != nil {
 					errs = append(errs, err)
 				} else {
-					userDSN = pmmDSN
+					userDSN = ssmDSN
 					accessOK = true
 				}
 			}
@@ -158,14 +158,14 @@ func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Inf
 	}
 
 	// Create a new PostgreSQL user.
-	if userDSN.User != "pmm" && flags.CreateUser {
+	if userDSN.User != plugin.SSMUsername && flags.CreateUser {
 		userDSN, err = createUser(ctx, db, userDSN, flags)
 		if err != nil {
 			return nil, err
 		}
 
 		// Store generated password.
-		info.PMMUserPassword = userDSN.Password
+		info.SSMUserPassword = userDSN.Password
 	}
 
 	info.DSN = userDSN.String()
@@ -175,7 +175,7 @@ func Init(ctx context.Context, flags Flags, pmmUserPassword string) (*plugin.Inf
 
 func createUserUsingSudoPSQL(ctx context.Context, userDSN DSN, flags Flags) (DSN, error) {
 	// New DSN has same host:port or socket, but different user and pass.
-	userDSN.User = "pmm"
+	userDSN.User = plugin.SSMUsername
 
 	// Check if user exists.
 	userExists, err := userExistsCheckUsingSudoPSQL(ctx, userDSN.User)
@@ -184,8 +184,7 @@ func createUserUsingSudoPSQL(ctx context.Context, userDSN DSN, flags Flags) (DSN
 	}
 	if userExists && !flags.Force {
 		var errMsg []string
-		errMsg = append(errMsg, fmt.Sprintf("* PostgreSQL user %s already exists. %s", userDSN.User,
-			"Try without --create-user flag using the default credentials or specify the existing `pmm` user ones."))
+		errMsg = append(errMsg, fmt.Sprintf("* PostgreSQL user %s already exists. Try without --create-user flag using the default credentials or specify the existing `%s` user ones.", plugin.SSMUsername, plugin.SSMUsername))
 		errMsg = append([]string{"Problem creating a new PostgreSQL user:", ""}, errMsg...)
 		errMsg = append(errMsg, "", "If you think the above is okay to proceed, you can use --force flag.")
 		return DSN{}, errors.New(strings.Join(errMsg, "\n"))
@@ -228,7 +227,7 @@ func createUserUsingSudoPSQL(ctx context.Context, userDSN DSN, flags Flags) (DSN
 
 func createUser(ctx context.Context, db *sql.DB, userDSN DSN, flags Flags) (DSN, error) {
 	// New DSN has same host:port or socket, but different user and pass.
-	userDSN.User = "pmm"
+	userDSN.User = plugin.SSMUsername
 	if flags.CreateUserPassword != "" {
 		userDSN.Password = flags.CreateUserPassword
 	} else {
@@ -242,8 +241,7 @@ func createUser(ctx context.Context, db *sql.DB, userDSN DSN, flags Flags) (DSN,
 	}
 	if userExists && !flags.Force {
 		var errMsg []string
-		errMsg = append(errMsg, fmt.Sprintf("* PostgreSQL user %s already exists. %s", userDSN.User,
-			"Try without --create-user flag using the default credentials or specify the existing `pmm` user ones."))
+		errMsg = append(errMsg, fmt.Sprintf("* PostgreSQL user %s already exists. Try without --create-user flag using the default credentials or specify the existing `%s` user ones.", plugin.SSMUsername, plugin.SSMUsername))
 		errMsg = append([]string{"Problem creating a new PostgreSQL user:", ""}, errMsg...)
 		errMsg = append(errMsg, "", "If you think the above is okay to proceed, you can use --force flag.")
 		return DSN{}, errors.New(strings.Join(errMsg, "\n"))
