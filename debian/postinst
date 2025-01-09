@@ -55,6 +55,21 @@ elif [ "$1" == "configure" ]; then
         find /opt/ss/percona/qan-agent -maxdepth 1 ! -path /opt/ss/percona/qan-agent ! -name bin -exec cp -r "{}" /opt/ss/qan-agent/ \;
     fi
 
+    # from 9.x going forward, we leave the new config files as .new files
+    if ! [ -f /opt/ss/ssm-client/.old-version ] || [[ "$(cat /opt/ss/ssm-client/.old-version)" =~ ^[vV]?[0-8][.] ]]; then
+        :
+    else
+        for file in /opt/ss/ssm-client/config/*; do
+            if ! [ -f /opt/ss/ssm-client/${file#/opt/ss/ssm-client/config/} ]; then
+                mv "${file}" /opt/ss/ssm-client/
+            elif diff -s "$file" /opt/ss/ssm-client/${file#/opt/ss/ssm-client/config/} >/dev/null; then
+                :
+            else
+                mv "${file}" /opt/ss/ssm-client/${file#/opt/ss/ssm-client/config/}.new
+            fi
+        done
+    fi
+
     ssm-admin upgrade
 fi
 
