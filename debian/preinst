@@ -10,3 +10,10 @@ if [ -d /usr/local/percona/ ]; then
         mv /usr/local/percona/pmm-client/pmm.yml /tmp/
     fi
 fi
+
+# Upgrade
+if [ "$1" == "upgrade" ] && [ -n "$2" ]; then
+    # save old version, so we can know what's the last version that
+    # it upgraded from later
+    echo "$2" > /opt/ss/ssm-client/.old-version
+fi

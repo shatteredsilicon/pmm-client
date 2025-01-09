@@ -106,6 +106,15 @@ install -m 0644 %{_GOPATH}/src/github.com/shatteredsilicon/qan-agent/support-fil
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%pre
+if [ $1 -gt 1 ]; then
+    # save old version, so we can know what's the last version that
+    # it upgraded from later
+    if command -v ssm-admin 2>&1 >/dev/null; then
+        ssm-admin --version > /opt/ss/ssm-client/.old-version
+    fi
+fi
+
 %post
 # Upgrade
 if [ $1 -gt 1 ] || [ -f /usr/local/percona/pmm-client/pmm.yml ]; then
@@ -123,20 +132,23 @@ if [ $1 -gt 1 ] || [ -f /usr/local/percona/pmm-client/pmm.yml ]; then
         find /usr/local/percona/qan-agent -maxdepth 1 ! -path /usr/local/percona/qan-agent ! -name bin -exec cp -r "{}" /opt/ss/qan-agent/ \;
     fi
 
-    # move new exporter config files to /opt/ss/ssm-client/config/,
-    # so we can handle config migration in same way on deb and rpm
-    for file in /opt/ss/ssm-client/*.conf.rpmnew; do
-        if ! [ -f "$file" ]; then
-            continue
-        fi
+    # from 9.x going forward, we leave the .rpmnew config files alone
+    if ! [ -f /opt/ss/ssm-client/.old-version ] || [[ "$(cat /opt/ss/ssm-client/.old-version)" =~ ^[vV]?[0-8][.] ]]; then
+        # move new exporter config files to /opt/ss/ssm-client/config/,
+        # so we can handle config migration in same way on deb and rpm
+        for file in /opt/ss/ssm-client/*.conf.rpmnew; do
+            if ! [ -f "$file" ]; then
+                continue
+            fi
 
-        if ! [ -d /opt/ss/ssm-client/config ]; then
-            mkdir /opt/ss/ssm-client/config
-        fi
+            if ! [ -d /opt/ss/ssm-client/config ]; then
+                mkdir /opt/ss/ssm-client/config
+            fi
 
-        trim_file="${file%.rpmnew}"
-        mv "$file" "/opt/ss/ssm-client/config/${trim_file##*/}"
-    done
+            trim_file="${file%.rpmnew}"
+            mv "$file" "/opt/ss/ssm-client/config/${trim_file##*/}"
+        done
+    fi
 
     # backup ssm service files under /etc/systemd/system
     for file in /etc/systemd/system/ssm-{linux,mysql,mongodb,postgresql,proxysql}-metrics.service /etc/systemd/system/ssm-{mysql,mongodb}-queries.service; do
