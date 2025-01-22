@@ -1183,7 +1183,7 @@ In case, some of the endpoints are in problem state, please check if the corresp
 If all endpoints are down here and 'ssm-admin list' shows all services are up,
 please check the firewall settings whether this system allows incoming connections by address:port in question.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := admin.CheckNetwork(); err != nil {
+			if err := admin.CheckNetwork(flagNTPHost); err != nil {
 				fmt.Println("Error checking network status:", err)
 				os.Exit(1)
 			}
@@ -1551,6 +1551,8 @@ Usually, it runs automatically when ssm-client package is upgraded to upgrade lo
 	flagMySQLQueries mysqlQueries.Flags
 	flagC            ssm.Config
 	flagTimeout      time.Duration
+
+	flagNTPHost string
 )
 
 func main() {
@@ -1625,6 +1627,7 @@ func main() {
 	cmdConfig.Flags().BoolVar(&flagC.ServerSSL, "server-ssl", false, "enable SSL to communicate with SSM Server")
 	cmdConfig.Flags().BoolVar(&flagC.ServerInsecureSSL, "server-insecure-ssl", false, "enable insecure SSL (self-signed certificate) to communicate with SSM Server")
 	cmdConfig.Flags().BoolVar(&flagForce, "force", false, "force to set client name on initial setup after uninstall with unreachable server")
+	cmdConfig.Flags().StringVar(&flagC.NTPHost, "ntp-host", "", "NTP server to use")
 
 	cmdAdd.PersistentFlags().IntVar(&flagServicePort, "service-port", 0, "service port")
 
@@ -1757,6 +1760,8 @@ func main() {
 	cmdRestart.Flags().BoolVar(&flagAll, "all", false, "restart all monitoring services")
 	cmdEnable.Flags().BoolVar(&flagAll, "all", false, "enable all monitoring services")
 	cmdDisable.Flags().BoolVar(&flagAll, "all", false, "disable all monitoring services")
+
+	cmdCheckNet.Flags().StringVar(&flagNTPHost, "ntp-host", "", "NTP server to use")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

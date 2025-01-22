@@ -34,8 +34,12 @@ import (
 	"golang.org/x/net/context"
 )
 
+const (
+	defaultNTPHost = "0.pool.ntp.org"
+)
+
 // CheckNetwork check connectivity between client and server.
-func (a *Admin) CheckNetwork() error {
+func (a *Admin) CheckNetwork(ntpHost string) error {
 	// Check QAN API health.
 	qanStatus := false
 	url := a.qanAPI.URL(a.serverURL, qanAPIBasePath, "ping")
@@ -66,7 +70,13 @@ func (a *Admin) CheckNetwork() error {
 		timeFormat := "2006-01-02 15:04:05 -0700 MST"
 
 		// Real time (ntp server time)
-		ntpHost := "0.pool.ntp.org"
+		if ntpHost == "" {
+			ntpHost = a.Config.NTPHost
+		}
+		if ntpHost == "" {
+			ntpHost = defaultNTPHost
+		}
+
 		var ntpResponse *ntp.Response
 		var ntpTimeErr error
 		// ntp.Time() has default timeout of 5s, which should be enough,
@@ -83,7 +93,7 @@ func (a *Admin) CheckNetwork() error {
 		}
 		ntpTimeText := ""
 		if ntpTimeErr != nil {
-			ntpTimeText = fmt.Sprintf("unable to get ntp time: %s", err)
+			ntpTimeText = fmt.Sprintf("unable to get ntp time: %s", ntpTimeErr)
 		} else {
 			ntpTimeText = ntpResponse.Time.Format(timeFormat)
 		}

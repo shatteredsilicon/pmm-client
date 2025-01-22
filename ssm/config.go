@@ -53,6 +53,7 @@ type Config struct {
 	ServerSSL         bool      `yaml:"server_ssl,omitempty"`
 	ServerInsecureSSL bool      `yaml:"server_insecure_ssl,omitempty"`
 	ManagedAPIPath    string    `yaml:"managed_api_path"`
+	NTPHost           string    `yaml:"ntp_host,omitempty"`
 	CTime             time.Time `yaml:"-"` // read from ctime
 }
 
@@ -118,6 +119,10 @@ func (a *Admin) SetConfig(cf Config, flagForce bool) error {
 	if cf.ServerInsecureSSL {
 		a.Config.ServerSSL = false
 		a.Config.ServerInsecureSSL = true
+	}
+
+	if cf.NTPHost != "" {
+		a.Config.NTPHost = cf.NTPHost
 	}
 
 	// Set APIs and check if server is alive.
